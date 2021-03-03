@@ -32,7 +32,7 @@ Model Manipulation:
 \tload_net(model_name,device)
 \ttraining_validation(PATH,xlims=[None,None],save=False,full_path=False) ... PATH is a local title of a folder or file (within ./TrainedNetworks)
 \tprediction(dataset, net, class_groups,(device='cuda',reps='360'))
-\tevaluate(file_name,dataset='automatic')
+\tevaluate(file_name, dataset='automatic')
 
 Evaluation Plots:
 \tplot_conf_mat(conf_matrix,normalised=True,n_classes=2,format_input=None,title='Confusion Matrix')

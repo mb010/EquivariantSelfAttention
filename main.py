@@ -4,39 +4,45 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-import configparser
+import configparser as ConfigParser
 import numpy as np
 
-class model(configfile):
+import utils
+import networks
+
+# Set seeds for reproduceability
+torch.manual_seed(42)
+np.radnom.seed(42)
+
+
+class Model:
     def __init__(self, configfile):
         # Read in the config file
-        self.config = configparser.ConfigParser()
-        self.config.read(configfile)
+        self.config_name = configfile
+        self.config = ConfigParser.SafeConfigParser(allow_no_value=True)
+        self.config.read(self.config_name)
 
-        self.network = utils.load_network(**config['network'])
-        self.data = utils.load_data(**config['data']) # Should contain self.data.test and self.data.train (and maybe more?)
-        #if config['data']['test_data'] != 'train':
-        #    self.data = utils.load_data(config['data']['test_data'])
-        #else:
-        #    self.data = self.train_data
+        self.n_classes = self.config['data']['num_classes']
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-        if config['model']['trained']:
-            self.model = utils.load_model(**config['model'])
-            self.hyperparameters = self.config_dict(config['hypterparameters'])
+        self.net = utils.net.load(
+            device=self.device,
+            **self.config['model'])
+        self.data = utils.data.load(
+            device=self.device,
+            rotations=self.config.getint('model', 'number_rotations'),
+            **self.config['data'])
+        self.train = utils.train.load(self.config_name)
+
+        self.model_trained = self.config.getboolean('grid_search', 'done')
+
+
+    def model_trained(self):
+        if self.config.getboolean('grid_search', 'done'):
+            print('Training not required')
+            #self.model = utils.load_model(**config['model'])
+            #self.hyperparameters = self.config(**config['final_parameters'])
         else:
-            self.hyperparameters = utils.grid_search(**config['model'], self.data)
-            self.model = utils.train(**config['model'], self.data)
-
-        # Initialise various parameters
-        #self.net_name = self.config['network']['name']
-        #self.data_name = self.config['data']['name']
-        #self.hypterparameters = self.config['parameters']
-        #self.quiet = self.config['utils']['quiet']
-        #self.loss = self.config['utils']['loss']
-        #self.optimiser = self.config['utils']['optimiser'] # Hyperparameter?
-        #self.config['save'] # If volume is too large)
-
-        # Load objects
-        #self.data = self.load_data()#**self.config['data']
-        #self.net = self.get_net() # **self.config['network']
-        #self.model = self.get_model() # self.config['network'],self.config['data'],self.config['hyperparameters']
+            print('Training required')
+            #self.hyperparameters = utils.grid_search(self.data, **config['model'])
+            #self.model = utils.train(**config['model'], self.data)
