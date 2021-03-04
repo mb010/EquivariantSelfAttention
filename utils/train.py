@@ -154,7 +154,7 @@ def train(date,
 
     ##############################
     # Sample and select data which is within 'allowed_labels'
-    train_sampler,valid_sampler = Sampler(traindata, valid_size=valid_size, allowed_labels=allowed_labels)
+    train_sampler, valid_sampler = Sampler(traindata, valid_size=valid_size, allowed_labels=allowed_labels)
 
     outset = torch.utils.data.DataLoader(outdata, batch_size=batch_size)
     trainset = torch.utils.data.DataLoader(traindata, batch_size=batch_size, sampler=train_sampler)

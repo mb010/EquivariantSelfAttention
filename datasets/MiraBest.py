@@ -124,7 +124,7 @@ class MiraBest_full(data.Dataset):
         # doing this so that it is consistent with all other datasets
         # to return a PIL Image
         img = np.reshape(img,(150,150))
-        img = Image.fromarray(img,mode='L')
+        img = Image.fromarray(img, mode='L')
 
         if self.transform is not None:
             img = self.transform(img)

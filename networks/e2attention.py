@@ -4,12 +4,24 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from models.networks_other import init_weights
+from .weights import init_weights
+#import weights
 
 # Defining the Network
 class AGRadGalNet(nn.Module):
-    def __init__(self,aggregation_mode='concat', n_classes=2, AG=3, normalisation='sigmoid'):
-        super(AGRadGalNet,self).__init__()
+    def __init__(self,
+                 base = 'AGRadGalNet',
+                 attention_module='SelfAttention',
+                 attention_gates=3,
+                 attention_aggregation='ft', 
+                 n_classes=2, 
+                 attention_normalisation='sigmoid',
+                 quiet=True
+                ):
+        super(AGRadGalNet, self).__init__()
+        aggregation_mode = attention_aggregation
+        normalisation = attention_normalisation
+        AG = int(attention_gates)
         assert aggregation_mode in ['concat', 'mean', 'deep_sup', 'ft'], 'Aggregation mode not recognised. Valid inputs include concat, mean, deep_sup or ft.'
         assert normalisation in ['sigmoid','range_norm','std_mean_norm','tanh','softmax'], f'Nomralisation not implemented. Can be any of: sigmoid, range_norm, std_mean_norm, tanh, softmax'
         assert AG in [0,1,2,3], f'Number of Attention Gates applied (AG) must be an integer in range [0,3]. Currently AG={AG}'

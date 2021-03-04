@@ -4,3 +4,6 @@ venv
 .DS_Store
 */.DS_Store
 *__pycache__
+data/mirabest
+data/FRDEEP
+data/MingoLOTSS
