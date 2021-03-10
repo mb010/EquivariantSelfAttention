@@ -3,6 +3,7 @@
 #]
 
 from .net import *
+from .utils import *
 #from .data import *
 #from .train import *
 #from .attention import *

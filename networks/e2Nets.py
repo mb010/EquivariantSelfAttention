@@ -11,11 +11,71 @@ import utils
     # Fanaroff-Riley classification of radio galaxies using group-equivariant 
     # convolutional neural networks, 2021, Scaife & Porter (https://arxiv.org/pdf/2102.08252.pdf)
 
+# -----------------------------------------------------------------------------
+
+class testNet(nn.Module):
+    def __init__(self, base, in_chan=1, out_chan=2, imsize=150, kernel_size=5, N=None, quiet=True):
+        super(testNet, self).__init__()
+        
+        z = 0.5*(imsize - 2)
+        z = int(0.5*(z - 2))
+        
+        #self.mask = utils.build_mask(imsize, margin=1)
+
+        self.conv1 = nn.Conv2d(in_chan, 6, kernel_size, padding=1)
+        self.conv2 = nn.Conv2d(6, 16, kernel_size, padding=1)
+        self.fc1   = nn.Linear(16*z*z, 120)
+        self.fc2   = nn.Linear(120, 84)
+        self.fc3   = nn.Linear(84, out_chan)
+        self.drop  = nn.Dropout(p=0.5)
+        
+        # dummy parameter for tracking device
+        self.dummy = nn.Parameter(torch.empty(0))
+        
+    def loss(self,p,y):
+        
+        # check device for model:
+        device = self.dummy.device
+        
+        # p : softmax(x)
+        loss_fnc = nn.NLLLoss().to(device=device)
+        loss = loss_fnc(torch.log(p),y)
+        
+        return loss
+     
+    def enable_dropout(self):
+        for m in self.modules():
+            if isinstance(m, nn.Dropout):
+                m.train()
+
+        return
+        
+    def forward(self, x):
+        
+        # check device for model:
+        device = self.dummy.device
+        #mask = self.mask.to(device=device)
+        
+        #x = x*mask
+        
+        x = F.relu(self.conv1(x))
+        x = F.max_pool2d(x, 2)
+        x = F.relu(self.conv2(x))
+        x = F.max_pool2d(x, 2)
+        
+        x = x.view(x.size()[0], -1)
+        
+        x = F.relu(self.fc1(x))
+        x = F.relu(self.fc2(x))
+        x = self.drop(x)
+        x = self.fc3(x)
+    
+        return x
         
 # -----------------------------------------------------------------------------
 
 class VanillaLeNet(nn.Module):
-    def __init__(self, in_chan, out_chan, imsize, kernel_size=5, N=None):
+    def __init__(self, base, in_chan=1, out_chan=2, imsize=150, kernel_size=5, N=None, quiet=True):
         super(VanillaLeNet, self).__init__()
         
         z = 0.5*(imsize - 2)
@@ -156,7 +216,7 @@ class CNSteerableLeNet(nn.Module):
 # -----------------------------------------------------------------------------
 
 class DNSteerableLeNet(nn.Module):
-    def __init__(self, in_chan, out_chan, imsize, kernel_size=5, N=8):
+    def __init__(self, base='DNSteerableLeNet', in_chan=1, out_chan=2, imsize=(150,150), kernel_size=5, N=8):
         super(DNSteerableLeNet, self).__init__()
         
         z = 0.5*(imsize - 2)

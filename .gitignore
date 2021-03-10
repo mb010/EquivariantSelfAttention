@@ -5,5 +5,10 @@ venv
 */.DS_Store
 *__pycache__
 data/mirabest
-data/FRDEEP
-data/MingoLOTSS
+data/frdeep
+data/mingo
+models/bowles2021
+models/scaife2021
+models/tang2019
+models/e2attention
+venv

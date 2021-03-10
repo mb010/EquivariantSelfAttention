@@ -131,7 +131,7 @@ class MingoLoTSS(data.Dataset):
         if self.target_transform is not None:
             target = self.target_transform(target)
 
-        return img, target, index
+        return img, target#, index ### Removed index to be uniform with MiraBest and FRDEEP.
 
     def __len__(self):
         return len(self.data)

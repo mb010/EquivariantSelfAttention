@@ -19,6 +19,7 @@ from networks import AGRadGalNet
 from datasets import FRDEEPF
 from datasets import MiraBest_full, MBFRConfident, MBFRUncertain, MBHybrid
 from datasets import MingoLoTSS, MLFR, MLFRTest
+#import argparse
 
 # Set seeds for reproduceability
 torch.manual_seed(42)
@@ -28,12 +29,15 @@ np.random.seed(42)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Read in config file
-config_name = "configs/bowles2021mirabest.cfg"
+args = utils.parse_args()
+config_name = args['config']
+#config_name = "configs/bowles2021mirabest.cfg"
 config = ConfigParser.ConfigParser(allow_no_value=True)
-config.read(config_name)
+config.read(f"configs/{config_name}")
 
 # Load network architecture (with random weights)
-print(f"Loading in {config['model']['base']}")
+model_name = config['model']['base']
+print(f"Loading in {model_name}")
 net = locals()[config['model']['base']](**config['model']).to(device)
 
 """#class Model:
@@ -75,7 +79,8 @@ datastd = config.getfloat('data', 'datastd')
 number_rotations = config.getint('data', 'number_rotations')
 imsize = config.getint('data', 'imsize')
 scaling_factor = config.getfloat('data', 'scaling')
-angles = list(range(0, 360, config.getint('data', 'number_rotations')))
+angles = np.linspace(0, 359, config.getint('data', 'number_rotations'))
+print(f"angles: {angles}")
 p_flip = 0.5 if config.getboolean('data','flip') else 0
 
 # Create hard random (seeded) rotation:
@@ -86,7 +91,8 @@ class RotationTransform:
         self.resample = resample
 
     def __call__(self, x):
-        angle = np.random.choice(a=self.angles, size=1)
+        angle = np.random.choice(a=self.angles, size=1)[0]
+        print(f'ANGLE CALL: {angle}')
         return transforms.functional.rotate(x, angle, resample=self.resample)
 
 
@@ -139,9 +145,7 @@ validation_size = config.getfloat('training', 'validation_set_size')
 dataset_size = len(train_data)
 nval = int(validation_size*dataset_size)
 indices = list(range(dataset_size))
-print(indices)
 np.random.shuffle(indices)
-print(indices)
 
 train_indices, val_indices = indices[nval:], indices[:nval]
 
@@ -170,7 +174,10 @@ optimizer = optimizers[optim_name]
 training_results = {
     'train_loss': 0,
     'validation_loss': 0,
-    'validation_confussion_matrix': 0,
+    'TP': 0,
+    'FP': 0,
+    'FN': 0,
+    'TN': 0,
     'validation_update': False
 }
 df = pd.DataFrame(columns = list(training_results.keys()))
@@ -239,7 +246,11 @@ for epoch_count in range(Epoch):
     train_loss = train_loss/(len(train_loader.dataset)*augmentation_loops)
     training_results['train_loss'] = train_loss
     training_results['validation_loss'] = validation_loss
-    training_results['validation_confussion_matrix'] = confussion_matrix
+    #training_results['validation_confussion_matrix'] = confussion_matrix
+    training_results['TP'] = confussion_matrix[0,0]
+    training_results['FP'] = confussion_matrix[0,1]
+    training_results['FN'] = confussion_matrix[1,0]
+    training_results['TN'] = confussion_matrix[1,1]
 
     # Print
     print(f"Epoch:{epoch_count:3}\tTraining Loss: {training_results['train_loss']:8.6f}\t\tValidation Loss: {training_results['validation_loss']:8.6f}")

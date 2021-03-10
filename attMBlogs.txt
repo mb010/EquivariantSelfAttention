@@ -1,0 +1,38 @@
+/raid/scratch/mbowles/EquivariantSelfAttention/venv/lib/python3.8/site-packages/torchvision/transforms/transforms.py:1314: UserWarning: Argument resample is deprecated and will be removed since v0.10.0. Please, use interpolation instead
+  warnings.warn(
+/raid/scratch/mbowles/EquivariantSelfAttention/venv/lib/python3.8/site-packages/torchvision/transforms/functional.py:935: UserWarning: Argument resample is deprecated and will be removed since v0.10.0. Please, use interpolation instead
+  warnings.warn(
+Loading in AGRadGalNet
+angles: [  0.          51.42857143 102.85714286 154.28571429 205.71428571
+ 257.14285714 308.57142857 360.        ]
+Files already downloaded and verified
+Files already downloaded and verified
+Files already downloaded and verified
+ANGLE CALL: 308.57142857142856
+ANGLE CALL: 205.71428571428572
+ANGLE CALL: 51.42857142857143
+ANGLE CALL: 308.57142857142856
+ANGLE CALL: 51.42857142857143
+ANGLE CALL: 102.85714285714286
+ANGLE CALL: 51.42857142857143
+ANGLE CALL: 0.0
+ANGLE CALL: 360.0
+ANGLE CALL: 205.71428571428572
+ANGLE CALL: 154.28571428571428
+ANGLE CALL: 51.42857142857143
+ANGLE CALL: 308.57142857142856
+ANGLE CALL: 0.0
+ANGLE CALL: 154.28571428571428
+ANGLE CALL: 205.71428571428572
+Traceback (most recent call last):
+  File "main.py", line 215, in <module>
+    pred = net.forward(data)
+  File "/raid/scratch/mbowles/EquivariantSelfAttention/networks/SelfAttention_Bowles2021.py", line 173, in forward
+    conv1a = self.bnorm1a(self.relu1a(self.conv1a(inputs))) #1->6
+  File "/raid/scratch/mbowles/EquivariantSelfAttention/venv/lib/python3.8/site-packages/torch/nn/modules/module.py", line 889, in _call_impl
+    result = self.forward(*input, **kwargs)
+  File "/raid/scratch/mbowles/EquivariantSelfAttention/venv/lib/python3.8/site-packages/torch/nn/modules/conv.py", line 399, in forward
+    return self._conv_forward(input, self.weight, self.bias)
+  File "/raid/scratch/mbowles/EquivariantSelfAttention/venv/lib/python3.8/site-packages/torch/nn/modules/conv.py", line 395, in _conv_forward
+    return F.conv2d(input, weight, bias, self.stride,
+RuntimeError: cuDNN error: CUDNN_STATUS_NOT_INITIALIZED
