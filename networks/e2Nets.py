@@ -216,8 +216,20 @@ class CNSteerableLeNet(nn.Module):
 # -----------------------------------------------------------------------------
 
 class DNSteerableLeNet(nn.Module):
-    def __init__(self, base='DNSteerableLeNet', in_chan=1, out_chan=2, imsize=(150,150), kernel_size=5, N=8):
+    def __init__(
+        self, 
+        base='DNSteerableLeNet', 
+        in_chan=1, 
+        out_chan=2, 
+        imsize=150, 
+        kernel_size=5, 
+        N=8, 
+        quiet=True, 
+        number_rotations=None):
         super(DNSteerableLeNet, self).__init__()
+        
+        if number_rotations != None:
+            N = int(number_rotations)
         
         z = 0.5*(imsize - 2)
         z = int(0.5*(z - 2))

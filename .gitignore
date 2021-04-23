@@ -11,4 +11,6 @@ models/bowles2021
 models/scaife2021
 models/tang2019
 models/e2attention
-venv
+*.log
+logs/
+runs.sh

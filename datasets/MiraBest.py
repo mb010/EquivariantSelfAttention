@@ -29,7 +29,7 @@ class MiraBest_full(data.Dataset):
             puts it in root directory. If dataset is already downloaded, it is not
             downloaded again.
     """
-
+    
     base_folder = 'batches'
     url = "http://www.jb.man.ac.uk/research/MiraBest/full_dataset/MiraBest_full_batches.tar.gz"
     filename = "MiraBest_full_batches.tar.gz"
@@ -43,7 +43,7 @@ class MiraBest_full(data.Dataset):
                   ['data_batch_6', 'b7113d89ddd33dd179bf64cb578be78e'],
                   ['data_batch_7', '626c866b7610bfd08ac94ca3a17d02a1'],
                   ]
-
+    
     test_list = [
                  ['test_batch', '5e443302dbdf3c2003d68ff9ac95f08c'],
                  ]
@@ -52,8 +52,8 @@ class MiraBest_full(data.Dataset):
                 'key': 'label_names',
                 'md5': 'e1b5450577209e583bc43fbf8e851965',
                 }
-
-
+    
+    
     def __init__(self, root, train=True,
                  transform=None, target_transform=None,
                  download=False):

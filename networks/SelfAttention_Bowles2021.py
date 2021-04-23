@@ -1,4 +1,4 @@
-# For the original files on the attention gates please see the **"./networks/sononet_grid_attention.py"** file to be found under:https://github.com/ozan-oktay/Attention-Gated-Networks
+# Inspired by: https://github.com/ozan-oktay/Attention-Gated-Networks (/networks/sononet_grid_attention.py)
 import numpy as np
 import torch
 import torch.nn as nn

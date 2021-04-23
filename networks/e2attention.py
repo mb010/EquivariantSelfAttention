@@ -1,27 +1,33 @@
-# For the original files on the attention gates please see the **"./networks/sononet_grid_attention.py"** file to be found under:https://github.com/ozan-oktay/Attention-Gated-Networks
+# Inspired by: https://github.com/ozan-oktay/Attention-Gated-Networks (/networks/sononet_grid_attention.py)
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+from e2cnn import gspaces
+from e2cnn import nn as e2nn
+
 from .weights import init_weights
 #import weights
 
 # Defining the Network
-class AGRadGalNet(nn.Module):
+class DNSteerableAGRadGalNet(nn.Module):
     def __init__(self,
-                 base = 'AGRadGalNet',
+                 base = 'DNSteerableAGRadGalNet',
                  attention_module='SelfAttention',
                  attention_gates=3,
                  attention_aggregation='ft', 
                  n_classes=2, 
                  attention_normalisation='sigmoid',
-                 quiet=True
+                 quiet=True,
+                 number_rotations=8,
+                 imsize=150
                 ):
-        super(AGRadGalNet, self).__init__()
+        super(DNSteerableAGRadGalNet, self).__init__()
         aggregation_mode = attention_aggregation
         normalisation = attention_normalisation
         AG = int(attention_gates)
+        N = int(number_rotations)
         assert aggregation_mode in ['concat', 'mean', 'deep_sup', 'ft'], 'Aggregation mode not recognised. Valid inputs include concat, mean, deep_sup or ft.'
         assert normalisation in ['sigmoid','range_norm','std_mean_norm','tanh','softmax'], f'Nomralisation not implemented. Can be any of: sigmoid, range_norm, std_mean_norm, tanh, softmax'
         assert AG in [0,1,2,3], f'Number of Attention Gates applied (AG) must be an integer in range [0,3]. Currently AG={AG}'
@@ -31,28 +37,41 @@ class AGRadGalNet(nn.Module):
         self.ag = AG
         self.filters = filters
         self.aggregation_mode = aggregation_mode
+        
+        # Setting up e2
+        self.r2_act = gspaces.FlipRot2dOnR2(N=8)
+        in_type = e2nn.FieldType(self.r2_act, [self.r2_act.trivial_repr])
+        out_type = e2nn.FieldType(self.r2_act, 6*[self.r2_act.trivial_repr])
+        self.in_type = in_type
+        
+        self.mask = e2nn.MaskModule(in_type, imsize, margin=0)
+        self.conv1a = e2nn.R2Conv(in_type,  out_type, kernel_size=3, padding=1, stride=1, bias=False); self.relu1a = e2nn.ReLU(out_type); self.bnorm1a= e2nn.InnerBatchNorm(out_type)
+        self.conv1b = e2nn.R2Conv(out_type, out_type, kernel_size=3, padding=1, stride=1, bias=False); self.relu1b = e2nn.ReLU(out_type); self.bnorm1b= e2nn.InnerBatchNorm(out_type)
+        self.conv1c = e2nn.R2Conv(out_type, out_type, kernel_size=3, padding=1, stride=1, bias=False); self.relu1c = e2nn.ReLU(out_type); self.bnorm1c= e2nn.InnerBatchNorm(out_type)
+        self.mpool1 = e2nn.PointwiseMaxPool(out_type, kernel_size=(2,2), stride=2)
+        
+        in_type = out_type
+        out_type = e2nn.FieldType(self.r2_act, 16*[self.r2_act.trivial_repr])
+        self.conv2a = e2nn.R2Conv(in_type,  out_type, kernel_size=3, padding=1, stride=1, bias=False); self.relu2a = e2nn.ReLU(out_type); self.bnorm2a= e2nn.InnerBatchNorm(out_type)
+        self.conv2b = e2nn.R2Conv(out_type, out_type, kernel_size=3, padding=1, stride=1, bias=False); self.relu2b = e2nn.ReLU(out_type); self.bnorm2b= e2nn.InnerBatchNorm(out_type)
+        self.conv2c = e2nn.R2Conv(out_type, out_type, kernel_size=3, padding=1, stride=1, bias=False); self.relu2c = e2nn.ReLU(out_type); self.bnorm2c= e2nn.InnerBatchNorm(out_type)
+        self.mpool2 = e2nn.PointwiseMaxPool(out_type, kernel_size=(2,2), stride=2)
 
-        self.conv1a = nn.Conv2d(in_channels=1, out_channels=6, kernel_size=3, padding=1, stride=1); self.relu1a = nn.ReLU(); self.bnorm1a= nn.BatchNorm2d(6)
-        self.conv1b = nn.Conv2d(in_channels=6, out_channels=6, kernel_size=3, padding=1, stride=1); self.relu1b = nn.ReLU(); self.bnorm1b= nn.BatchNorm2d(6)
-        self.conv1c = nn.Conv2d(in_channels=6, out_channels=6, kernel_size=3, padding=1, stride=1); self.relu1c = nn.ReLU(); self.bnorm1c= nn.BatchNorm2d(6)
-        self.mpool1 = nn.MaxPool2d(kernel_size=(2,2), stride=2)
+        in_type = out_type
+        out_type = e2nn.FieldType(self.r2_act, 32*[self.r2_act.trivial_repr])
+        self.conv3a = e2nn.R2Conv(in_type,  out_type, kernel_size=3, padding=1, stride=1, bias=False); self.relu3a = e2nn.ReLU(out_type); self.bnorm3a= e2nn.InnerBatchNorm(out_type)
+        self.conv3b = e2nn.R2Conv(out_type, out_type, kernel_size=3, padding=1, stride=1, bias=False); self.relu3b = e2nn.ReLU(out_type); self.bnorm3b= e2nn.InnerBatchNorm(out_type)
+        self.conv3c = e2nn.R2Conv(out_type, out_type, kernel_size=3, padding=1, stride=1, bias=False); self.relu3c = e2nn.ReLU(out_type); self.bnorm3c= e2nn.InnerBatchNorm(out_type)
+        self.mpool3 = e2nn.PointwiseMaxPool(out_type, kernel_size=(2,2), stride=2)
 
-        self.conv2a = nn.Conv2d(in_channels=6, out_channels=16, kernel_size=3, padding=1, stride=1); self.relu2a = nn.ReLU(); self.bnorm2a= nn.BatchNorm2d(16)
-        self.conv2b = nn.Conv2d(in_channels=16, out_channels=16, kernel_size=3, padding=1, stride=1); self.relu2b = nn.ReLU(); self.bnorm2b= nn.BatchNorm2d(16)
-        self.conv2c = nn.Conv2d(in_channels=16, out_channels=16, kernel_size=3, padding=1, stride=1); self.relu2c = nn.ReLU(); self.bnorm2c= nn.BatchNorm2d(16)
-        self.mpool2 = nn.MaxPool2d(kernel_size=(2,2), stride=2)
-
-        self.conv3a = nn.Conv2d(in_channels=16, out_channels=32, kernel_size=3, padding=1, stride=1); self.relu3a = nn.ReLU(); self.bnorm3a= nn.BatchNorm2d(32)
-        self.conv3b = nn.Conv2d(in_channels=32, out_channels=32, kernel_size=3, padding=1, stride=1); self.relu3b = nn.ReLU(); self.bnorm3b= nn.BatchNorm2d(32)
-        self.conv3c = nn.Conv2d(in_channels=32, out_channels=32, kernel_size=3, padding=1, stride=1); self.relu3c = nn.ReLU(); self.bnorm3c= nn.BatchNorm2d(32)
-        self.mpool3 = nn.MaxPool2d(kernel_size=(2,2), stride=2)
-
-        self.conv4a = nn.Conv2d(in_channels=32, out_channels=64, kernel_size=3, padding=1, stride=1); self.relu4a = nn.ReLU(); self.bnorm4a= nn.BatchNorm2d(64)
-        self.conv4b = nn.Conv2d(in_channels=64, out_channels=64, kernel_size=3, padding=1, stride=1); self.relu4b = nn.ReLU(); self.bnorm4b= nn.BatchNorm2d(64)
-        self.mpool4 = nn.MaxPool2d(kernel_size=(2,2), stride=2)
+        in_type = out_type
+        out_type = e2nn.FieldType(self.r2_act, 64*[self.r2_act.trivial_repr])
+        self.conv4a = e2nn.R2Conv(in_type,  out_type, kernel_size=3, padding=1, stride=1, bias=False); self.relu4a = e2nn.ReLU(out_type); self.bnorm4a= e2nn.InnerBatchNorm(out_type)
+        self.conv4b = e2nn.R2Conv(out_type, out_type, kernel_size=3, padding=1, stride=1, bias=False); self.relu4b = e2nn.ReLU(out_type); self.bnorm4b= e2nn.InnerBatchNorm(out_type)
+        self.mpool4 = e2nn.PointwiseMaxPool(out_type, kernel_size=(2,2), stride=2)
 
         self.flatten = nn.Flatten(1)
-        self.dropout = nn.Dropout()
+        self.dropout = nn.Dropout(p=0.5)
 
         if self.ag == 0:
             pass
@@ -99,11 +118,11 @@ class AGRadGalNet(nn.Module):
                 # Not able to initialise in a loop as the modules will not change device with remaining model.
                 self.classifiers = nn.ModuleList()
                 if self.ag>=1:
-                    self.classifiers.append(nn.Linear(self.attention_filter_sizes[0],2))
+                    self.classifiers.append(nn.Linear(self.attention_filter_sizes[0], 2))
                 if self.ag>=2:
-                    self.classifiers.append(nn.Linear(self.attention_filter_sizes[1],2))
+                    self.classifiers.append(nn.Linear(self.attention_filter_sizes[1], 2))
                 if self.ag>=3:
-                    self.classifiers.append(nn.Linear(self.attention_filter_sizes[2],2))
+                    self.classifiers.append(nn.Linear(self.attention_filter_sizes[2], 2))
                 if aggregation_mode == 'mean':
                     self.aggregate = self.aggregation_sep
                 elif aggregation_mode == 'deep_sup':
@@ -120,12 +139,13 @@ class AGRadGalNet(nn.Module):
 
 
         ####################
+        # I wonder if I can get away with this? I dont know.
         # initialise weights
-        for m in self.modules():
-            if isinstance(m, nn.Conv2d):
-                init_weights(m, init_type='kaiming')
-            elif isinstance(m, nn.BatchNorm2d):
-                init_weights(m, init_type='kaiming')
+        #for m in self.modules():
+        #    if isinstance(m, nn.Conv2d):
+        #        init_weights(m, init_type='kaiming')
+        #    elif isinstance(m, nn.BatchNorm2d):
+        #        init_weights(m, init_type='kaiming')
 
     # Define Aggregation Methods
     def aggregation_sep(self, *attended_maps, relu=False):
@@ -170,6 +190,12 @@ class AGRadGalNet(nn.Module):
     #######################################
     # Define forward pass:
     def forward(self,inputs):
+        batch_size = inputs.shape[0]
+        # Change input type to e2cnn group type
+        inputs_ = e2nn.GeometricTensor(inputs, self.in_type)
+        # Mask inputs using self.mask
+        inputs = self.mask(inputs_)
+        # Convolutional blocks
         conv1a = self.bnorm1a(self.relu1a(self.conv1a(inputs))) #1->6
         conv1b = self.bnorm1b(self.relu1b(self.conv1b(conv1a))) #6->6
         conv1c = self.bnorm1c(self.relu1c(self.conv1c(conv1b))) #6->6
@@ -188,32 +214,33 @@ class AGRadGalNet(nn.Module):
         conv4a = self.bnorm4a(self.relu4a(self.conv4a(mpool3))) #32->64
         conv4b = self.bnorm4b(self.relu4b(self.conv4b(conv4a))) #64->64
 
-        batch_size = inputs.shape[0]
+        ### Change input type back to torch tensor
+        
 
         ######
         # Apply correct number of attention maps / compatibility scores.
         # output of given attention function is tuple: (Applied Attention , Attention map)
         if self.ag == 0: #FC layers instead of attention networks to demonstrate the differences.
             #g0 = F.adaptive_avg_pool2d(conv4b,(1,1)).view(batch_size,-1)
-            mpool4 = self.mpool4(conv4b)
-            out = self.aggregate(mpool4) # Is this a fair comparison?
+            mpool4 = self.mpool4(conv4b.tensor)
+            out = self.aggregate(mpool4.tensor) # Is this a fair comparison?
 
         elif self.ag == 1:
-            attendedConv1, atten1 = self.attention1(conv3c, conv4b)
-            g1 = torch.sum(attendedConv1.view(batch_size, 32,-1), dim=-1)
+            attendedConv1, atten1 = self.attention1(conv3c.tensor, conv4b.tensor)
+            g1 = self.dropout(torch.sum(attendedConv1.view(batch_size, 32,-1), dim=-1))
             out = self.aggregate(g1)
 
         elif self.ag == 2:
-            attendedConv1, atten1 = self.attention1(conv3c, conv4b)
-            attendedConv2, atten2 = self.attention2(conv2c, conv4b)
-            g1 = torch.sum(attendedConv1.view(batch_size, 32,-1), dim=-1)
-            g2 = torch.sum(attendedConv2.view(batch_size, 16, -1), dim=-1)
+            attendedConv1, atten1 = self.attention1(conv3c.tensor, conv4b.tensor)
+            attendedConv2, atten2 = self.attention2(conv2c.tensor, conv4b.tensor)
+            g1 = self.dropout(torch.sum(attendedConv1.view(batch_size, 32,-1), dim=-1))
+            g2 = self.dropout(torch.sum(attendedConv2.view(batch_size, 16, -1), dim=-1))
             out = self.aggregate(g1, g2)
 
         elif self.ag == 3:
-            attendedConv1, atten1 = self.attention1(conv3c, conv4b)
-            attendedConv2, atten2 = self.attention2(conv2c, conv4b)
-            attendedConv3, atten3 = self.attention3(conv1c, conv4b)
+            attendedConv1, atten1 = self.attention1(conv3c.tensor, conv4b.tensor)
+            attendedConv2, atten2 = self.attention2(conv2c.tensor, conv4b.tensor)
+            attendedConv3, atten3 = self.attention3(conv1c.tensor, conv4b.tensor)
             g1 = self.dropout(torch.sum(attendedConv1.view(batch_size, 32,-1), dim=-1))
             g2 = self.dropout(torch.sum(attendedConv2.view(batch_size, 16, -1), dim=-1))
             g3 = self.dropout(torch.sum(attendedConv3.view(batch_size, 6, -1), dim=-1))
