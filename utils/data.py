@@ -149,7 +149,7 @@ def load(config, train=False, augmentation='config', angle=0, data_loader=False)
         if train:
             # -----------------------------------------------------------------------------
             validation_size = config.getfloat('training', 'validation_set_size')
-            dataset_size = len(train_data)
+            dataset_size = len(data)
 
             nval = int(validation_size*dataset_size)
             indices = list(range(dataset_size))
