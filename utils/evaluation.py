@@ -28,6 +28,7 @@ from sklearn.metrics import classification_report, roc_curve, auc
 torch.manual_seed(42)
 np.random.seed(42)
 
+# ==========================================================
 def predict(model, 
             data, 
             augmentation_loops=1, 
@@ -80,6 +81,7 @@ def predict(model,
         y_labels = list(y_labels.flatten())
     return y_pred, y_labels
 
+# ==========================================================
 def save_evaluation(y_pred, 
                     y_labels, 
                     model_name='', 
@@ -145,7 +147,18 @@ def save_evaluation(y_pred,
         else:
             df.to_csv(PATH+"full_evaluations.csv", mode='w', index=False, header=True)
             
-def training_plot(config, plot='', path_supliment='', marker='o', alpha=0.7, lr_modifier=1, fontsize=20, ylim=None, mean=False, window_size=1):
+# ==========================================================
+def training_plot(
+    config, plot='', 
+    path_supliment='', 
+    marker='o', 
+    alpha=0.7, 
+    lr_modifier=1, 
+    fontsize=20, 
+    ylim=None, 
+    mean=False, 
+    window_size=1):
+    
     if plot == '':
         plot = ['validation_loss', 'training_loss', 'accuracy']
     
@@ -193,3 +206,70 @@ def training_plot(config, plot='', path_supliment='', marker='o', alpha=0.7, lr_
         ax.set_ylim(ylim)
     ax.legend()
     fig.show()
+    
+# ==========================================================
+# ROC Curve
+def plot_roc_curve(fpr, tpr, title=None):
+    AUC = auc(fpr,tpr)
+    plt.figure(figsize=(8,8))
+    plt.plot(fpr, tpr, linewidth='2')
+
+    plt.xlabel('False Positive Rate')
+    plt.ylabel('True Positive Rate')
+    if title==None:
+        plt.title(f'ROC Curve with AUC={AUC:.3f}')
+    else:
+        plt.title(title)
+    plt.grid('large')
+    plt.xlim(None,1)
+    plt.ylim(0,None)
+    plt.show()
+
+# ==========================================================
+# Binary Confusion Matrix
+def plot_conf_mat(conf_matrix, normalised=True, n_classes=2, format_input=None, title='Confusion Matrix', publication=False):
+    # Following along the lines of (from the github on 29.04.2020)
+    # https://scikit-learn.org/stable/auto_examples/model_selection/plot_confusion_matrix.html
+    plt.rcParams.update({'font.size': 14})
+    
+    classes = ['FRI','FRII']
+    xticks_rotation='horizontal'
+    matrix = conf_matrix.copy() #Otherwise can change matrix inplace, which is undesirable for potential further processing.
+    temp = np.asarray(matrix)
+    values_format = '.4g'
+    if normalised==True:
+        values_format = '.1%'
+        for i in range(matrix.shape[0]):
+            matrix = matrix.astype('float64')
+            if publication:
+                matrix[i] = matrix[i]/matrix[i].sum()
+            else:
+                matrix[i] = matrix[i]/matrix[i].sum()
+
+    if type(format_input) == str:
+        values_format = format_input
+
+    # Initialise figure
+    fig, ax = plt.subplots(figsize=(8,8))
+    img = ax.imshow(matrix, interpolation='nearest', cmap=plt.cm.Blues)
+    fig.colorbar(img,ax=ax)
+    cmap_min, cmap_max = img.cmap(0), img.cmap(256)
+
+    # print text with appropriate color depending on background
+    text = np.empty_like(matrix, dtype=object)
+    thresh = (matrix.max() + matrix.min()) / 2.0
+    for i, j in product(range(n_classes), range(n_classes)):
+        color = cmap_max if matrix[i, j] < thresh else cmap_min
+        text[i, j] = ax.text(j, i, format(matrix[i, j], values_format),
+                             ha="center", va="center",
+                             color=color)
+    ax.set(xticks=np.arange(n_classes),
+           yticks=np.arange(n_classes),
+           xticklabels=classes,
+           yticklabels=classes,
+           ylabel="True label",
+           xlabel="Predicted label")
+    ax.set_ylim((n_classes - 0.5, -0.5))
+    plt.setp(ax.get_xticklabels(), rotation=xticks_rotation)
+    plt.title(title)
+    plt.show()

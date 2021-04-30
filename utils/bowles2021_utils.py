@@ -530,7 +530,7 @@ AUC \t\t{auc:.3f}
 def plot_roc_curve(fpr, tpr, title=None):
     AUC = auc(fpr,tpr)
     plt.figure(figsize=(8,8))
-    plt.plot(fpr,tpr,linewidth='2')
+    plt.plot(fpr, tpr, linewidth='2')
 
     plt.xlabel('False Positive Rate')
     plt.ylabel('True Positive Rate')
@@ -548,7 +548,7 @@ def plot_conf_mat(conf_matrix, normalised=True, n_classes=2, format_input=None, 
     # Following along the lines of (from the github on 29.04.2020)
     # https://scikit-learn.org/stable/auto_examples/model_selection/plot_confusion_matrix.html
     plt.rcParams.update({'font.size': 14})
-
+    
     classes = ['FRI','FRII']
     xticks_rotation='horizontal'
     matrix = conf_matrix.copy() #Otherwise can change matrix inplace, which is undesirable for potential further processing.
@@ -668,14 +668,14 @@ def attention_analysis(sources, model, source_only=True, attention_maps=None, Gr
 
 
 # Attention Epoch Plot
-def AttentionImagesByEpoch(sources,
-                           folder_name,
-                           net,
-                           epoch=1500,
-                           device=torch.device('cpu'),
-                           layer_name_base='compatibility_score',
-                           layer_no=2
-                          ):
+def AttentionImagesByEpoch(
+    sources,
+    folder_name,
+    net,
+    epoch=2000,
+    device=torch.device('cpu'),
+    layer_name_base='compatibility_score',
+    layer_no=2):
     """
     Args:
         sources: list of Images with type==torch.tensor, of dimension (-1,1,150,150)
@@ -709,7 +709,7 @@ def AttentionImagesByEpoch(sources,
                 attention_maps.append(attentions[i]) # Averaged attention maps of the images selected in the cell above.
                 original_attention_maps.append(original_attentions[i]) # Averaged but unsampled attention maps.
                 epoch_updates.append(epoch_temp) #List of when the validation loss / attention maps were updated.
-
+    
     return attention_maps, original_attention_maps, epoch_updates
 
 # Plot for attention by epoch (calls AttentionImagesByEpoch)
@@ -738,14 +738,14 @@ def attention_epoch_plot(source_images,
     net = load_net(path_to_model(folder_name), device)
 
     # Generate attention maps for each available Epoch
-    attention_maps_temp, og_attention_maps, epoch_labels = AttentionImagesByEpoch(source_images,
-                                                                                  'TrainedNetworks/'+folder_name,
-                                                                                  net,
-                                                                                  epoch=1500,
-                                                                                  device=device,
-                                                                                  layer_name_base=layer_name_base,
-                                                                                  layer_no=layer_no
-                                                                                 )
+    attention_maps_temp, og_attention_maps, epoch_labels = AttentionImagesByEpoch(
+        source_images,
+        'TrainedNetworks/'+folder_name,
+        net,
+        epoch=5000,
+        device=device,
+        layer_name_base=layer_name_base,
+        layer_no=layer_no)
     sample_number = source_images.shape[0]
     no_saved_attentions_epochs = np.asarray(attention_maps_temp).shape[0]//sample_number
     attentions = np.asarray(attention_maps_temp)
@@ -757,11 +757,6 @@ def attention_epoch_plot(source_images,
         width_array = np.linspace(0, no_saved_attentions_epochs-1, num=width, dtype=np.int32)
     else:
         width = no_saved_attentions_epochs
-    #print(f"""
-    #width_array: {len(width_array)}\t{width_array}
-    #no_saved_attentions_epochs: {no_saved_attentions_epochs}
-    #epoch_labels: {len(epoch_labels)}\t{epoch_labels}
-    #""")
 
     # Prepare the selection of images in the correct order as to be plotted reasonably (and prepare epoch labels)
     for j in range(sample_number):

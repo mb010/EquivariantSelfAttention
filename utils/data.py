@@ -22,9 +22,6 @@ from datasets import FRDEEPF
 from datasets import MiraBest_full, MBFRConfident, MBFRUncertain, MBHybrid
 from datasets import MingoLoTSS, MLFR, MLFRTest
 
-# Set seeds for reproduceability
-#torch.manual_seed(42)
-#np.random.seed(42)
 
 # -----------------------------------------------------------------------------
 

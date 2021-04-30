@@ -13,6 +13,7 @@ import PIL
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 import configparser as ConfigParser
 
 import utils
@@ -65,3 +66,74 @@ def load_model(config, load_model='best', path_supliment='', device=torch.device
     model.eval()
     
     return model
+
+def plot_3(
+    a, b, c, 
+    cmaps=['coolwarm'],
+    titles=["FRI Mean", "FRII Mean", "Difference"],
+    cbars_bool=[True],
+    figsize=(16,9),
+    vmin = ['adaptive'],
+    factors = [1, -1, 1]
+):
+
+    if len(cmaps)==1:
+        cmaps *= 3
+    if len(cbars_bool)==1:
+        cbars_bool *= 3
+    if len(vmin)==1:
+        vmin *= 3
+    if len(factors)==1:
+        factors *= 3
+
+    if len(a.shape)==3:
+        factors[0]=[1]
+        a /=a.max()
+    if len(b.shape)==3:
+        b /=b.max()
+    if len(c.shape)==3:
+        c = c-c.min(axis=2, keepdims=True)
+        c = c/c.max(axis=2, keepdims=True)
+    
+
+    
+    layout = """
+        abc
+    """
+    
+    vmin_dict = {
+        'adaptive': lambda arr : -np.max(arr),
+        'zero': lambda arr : 0,
+        'min' : lambda arr : np.min(arr),
+        'max': lambda arr : np.max(arr)
+    }
+    
+    fig = plt.figure(constrained_layout=True, figsize=figsize)
+    ax_dict = fig.subplot_mosaic(layout)
+    im_a = ax_dict['a'].imshow(factors[0]*a, cmap=cmaps[0], vmin=vmin_dict[vmin[0]](a), vmax=a.max(), origin='lower')
+    im_b = ax_dict['b'].imshow(factors[1]*b, cmap=cmaps[1], vmin=vmin_dict[vmin[1]](b), vmax=b.max(), origin='lower')
+    im_c = ax_dict['c'].imshow(factors[2]*c, cmap=cmaps[2], vmin=vmin_dict[vmin[2]](c), vmax=c.max(), origin='lower')
+    
+    ax_dict['a'].set_xticks([]); ax_dict['a'].set_yticks([])
+    ax_dict['b'].set_xticks([]); ax_dict['b'].set_yticks([])
+    ax_dict['c'].set_xticks([]); ax_dict['c'].set_yticks([])
+    
+    ax_dict['a'].set_title(f"{titles[0]}", fontsize=14)
+    ax_dict['b'].set_title(f"{titles[1]}", fontsize=14)
+    ax_dict['c'].set_title(f"{titles[2]}", fontsize=14)
+    
+    if cbars_bool[0]:
+        divider_a = make_axes_locatable(ax_dict['a'])
+        cax_a = divider_a.append_axes('bottom', size='5%', pad=0.05)
+        fig.colorbar(im_a, cax_a, orientation='horizontal')
+    if cbars_bool[1]:
+        divider_b = make_axes_locatable(ax_dict['b'])
+        cax_b = divider_b.append_axes('bottom', size='5%', pad=0.05)
+        fig.colorbar(im_b, cax_b, orientation='horizontal')
+    if cbars_bool[2]:
+        divider_c = make_axes_locatable(ax_dict['c'])
+        cax_c = divider_c.append_axes('bottom', size='5%', pad=0.05)
+        fig.colorbar(im_c, cax_c, orientation='horizontal')
+    
+    
+    fig.show()
