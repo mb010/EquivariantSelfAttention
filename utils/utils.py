@@ -74,7 +74,9 @@ def plot_3(
     cbars_bool=[True],
     figsize=(16,9),
     vmin = ['adaptive'],
-    factors = [1, -1, 1]
+    vmax = ['adaptive'],
+    factors = [1, -1, 1],
+    save=''
 ):
 
     if len(cmaps)==1:
@@ -85,7 +87,9 @@ def plot_3(
         vmin *= 3
     if len(factors)==1:
         factors *= 3
-
+    if len(vmax)==1:
+        vmax *= 3
+    
     if len(a.shape)==3:
         factors[0]=[1]
         a /=a.max()
@@ -95,24 +99,23 @@ def plot_3(
         c = c-c.min(axis=2, keepdims=True)
         c = c/c.max(axis=2, keepdims=True)
     
-
     
     layout = """
         abc
     """
-    
-    vmin_dict = {
-        'adaptive': lambda arr : -np.max(arr),
-        'zero': lambda arr : 0,
-        'min' : lambda arr : np.min(arr),
-        'max': lambda arr : np.max(arr)
-    }
+
+    def lim(value):
+        if value == "adaptive":
+            func = lambda arr : np.max(np.abs(arr))
+        else:
+            func = lambda arr : value
+        return func
     
     fig = plt.figure(constrained_layout=True, figsize=figsize)
     ax_dict = fig.subplot_mosaic(layout)
-    im_a = ax_dict['a'].imshow(factors[0]*a, cmap=cmaps[0], vmin=vmin_dict[vmin[0]](a), vmax=a.max(), origin='lower')
-    im_b = ax_dict['b'].imshow(factors[1]*b, cmap=cmaps[1], vmin=vmin_dict[vmin[1]](b), vmax=b.max(), origin='lower')
-    im_c = ax_dict['c'].imshow(factors[2]*c, cmap=cmaps[2], vmin=vmin_dict[vmin[2]](c), vmax=c.max(), origin='lower')
+    im_a = ax_dict['a'].imshow(factors[0]*a, cmap=cmaps[0], vmin=-lim(vmin[0])(a), vmax=lim(vmax[0])(a), origin='lower')
+    im_b = ax_dict['b'].imshow(factors[1]*b, cmap=cmaps[1], vmin=-lim(vmin[1])(b), vmax=lim(vmax[1])(b), origin='lower')
+    im_c = ax_dict['c'].imshow(factors[2]*c, cmap=cmaps[2], vmin=-lim(vmin[2])(c), vmax=lim(vmax[2])(c), origin='lower')
     
     ax_dict['a'].set_xticks([]); ax_dict['a'].set_yticks([])
     ax_dict['b'].set_xticks([]); ax_dict['b'].set_yticks([])
@@ -137,3 +140,19 @@ def plot_3(
     
     
     fig.show()
+    if save != '':
+        plt.savefig(save)
+    
+def build_mask(s, margin=2, dtype=torch.float32):
+    mask = torch.zeros(1, 1, s, s, dtype=dtype)
+    c = (s-1) / 2
+    t = (c - margin/100.*c)**2
+    sig = 2.
+    for x in range(s):
+        for y in range(s):
+            r = (x - c) ** 2 + (y - c) ** 2
+            if r > t:
+                mask[..., x, y] = np.exp((t - r)/sig**2)
+            else:
+                mask[..., x, y] = 1.
+    return mask

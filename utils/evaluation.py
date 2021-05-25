@@ -227,7 +227,7 @@ def plot_roc_curve(fpr, tpr, title=None):
 
 # ==========================================================
 # Binary Confusion Matrix
-def plot_conf_mat(conf_matrix, normalised=True, n_classes=2, format_input=None, title='Confusion Matrix', publication=False):
+def plot_conf_mat(conf_matrix, normalised=True, n_classes=2, format_input=None, title='Confusion Matrix', publication=False, save=''):
     # Following along the lines of (from the github on 29.04.2020)
     # https://scikit-learn.org/stable/auto_examples/model_selection/plot_confusion_matrix.html
     plt.rcParams.update({'font.size': 14})
@@ -273,3 +273,6 @@ def plot_conf_mat(conf_matrix, normalised=True, n_classes=2, format_input=None, 
     plt.setp(ax.get_xticklabels(), rotation=xticks_rotation)
     plt.title(title)
     plt.show()
+    
+    if save!='':
+        plt.savefig(save)
