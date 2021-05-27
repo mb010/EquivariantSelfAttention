@@ -78,6 +78,9 @@ def train(net,
     augmentation_loops = config.getint('data', 'number_rotations')
     if config.getboolean('data', 'flip'):
         augmentation_loops = augmentation_loops*2
+    # Potentially optimise early stopping augment validation set size?
+    #if config['data']['augment'] == "random rotation" & "DN" in config['model']['base']:
+    #    augmentation_loops = 10*augmentaion_loops
     
     # -----------------------------------------------------------------------------
     # Training Loop

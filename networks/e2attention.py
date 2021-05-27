@@ -21,18 +21,20 @@ class DNSteerableAGRadGalNet(nn.Module):
                  attention_normalisation='sigmoid',
                  quiet=True,
                  number_rotations=8,
-                 imsize=150
+                 imsize=150,
+                 kernel_size=3
                 ):
         super(DNSteerableAGRadGalNet, self).__init__()
         aggregation_mode = attention_aggregation
         normalisation = attention_normalisation
         AG = int(attention_gates)
         N = int(number_rotations)
+        kernel_size = int(kernel_size)
         assert aggregation_mode in ['concat', 'mean', 'deep_sup', 'ft'], 'Aggregation mode not recognised. Valid inputs include concat, mean, deep_sup or ft.'
         assert normalisation in ['sigmoid','range_norm','std_mean_norm','tanh','softmax'], f'Nomralisation not implemented. Can be any of: sigmoid, range_norm, std_mean_norm, tanh, softmax'
         assert AG in [0,1,2,3], f'Number of Attention Gates applied (AG) must be an integer in range [0,3]. Currently AG={AG}'
         filters = [6,16,32,64,128]
-        ksizes = [3,3,3,3,3,3] # Must all be odd for calculation of padding.
+        
         self.attention_out_sizes = []
         self.ag = AG
         self.filters = filters
@@ -45,29 +47,29 @@ class DNSteerableAGRadGalNet(nn.Module):
         self.in_type = in_type
         
         self.mask = e2nn.MaskModule(in_type, imsize, margin=0)
-        self.conv1a = e2nn.R2Conv(in_type,  out_type, kernel_size=3, padding=1, stride=1, bias=False); self.relu1a = e2nn.ReLU(out_type); self.bnorm1a= e2nn.InnerBatchNorm(out_type)
-        self.conv1b = e2nn.R2Conv(out_type, out_type, kernel_size=3, padding=1, stride=1, bias=False); self.relu1b = e2nn.ReLU(out_type); self.bnorm1b= e2nn.InnerBatchNorm(out_type)
-        self.conv1c = e2nn.R2Conv(out_type, out_type, kernel_size=3, padding=1, stride=1, bias=False); self.relu1c = e2nn.ReLU(out_type); self.bnorm1c= e2nn.InnerBatchNorm(out_type)
+        self.conv1a = e2nn.R2Conv(in_type,  out_type, kernel_size=kernel_size, padding=kernel_size//2, stride=1, bias=False); self.relu1a = e2nn.ReLU(out_type); self.bnorm1a= e2nn.InnerBatchNorm(out_type)
+        self.conv1b = e2nn.R2Conv(out_type, out_type, kernel_size=kernel_size, padding=kernel_size//2, stride=1, bias=False); self.relu1b = e2nn.ReLU(out_type); self.bnorm1b= e2nn.InnerBatchNorm(out_type)
+        self.conv1c = e2nn.R2Conv(out_type, out_type, kernel_size=kernel_size, padding=kernel_size//2, stride=1, bias=False); self.relu1c = e2nn.ReLU(out_type); self.bnorm1c= e2nn.InnerBatchNorm(out_type)
         self.mpool1 = e2nn.PointwiseMaxPool(out_type, kernel_size=(2,2), stride=2)
         
         in_type = out_type
         out_type = e2nn.FieldType(self.r2_act, 16*[self.r2_act.trivial_repr])
-        self.conv2a = e2nn.R2Conv(in_type,  out_type, kernel_size=3, padding=1, stride=1, bias=False); self.relu2a = e2nn.ReLU(out_type); self.bnorm2a= e2nn.InnerBatchNorm(out_type)
-        self.conv2b = e2nn.R2Conv(out_type, out_type, kernel_size=3, padding=1, stride=1, bias=False); self.relu2b = e2nn.ReLU(out_type); self.bnorm2b= e2nn.InnerBatchNorm(out_type)
-        self.conv2c = e2nn.R2Conv(out_type, out_type, kernel_size=3, padding=1, stride=1, bias=False); self.relu2c = e2nn.ReLU(out_type); self.bnorm2c= e2nn.InnerBatchNorm(out_type)
+        self.conv2a = e2nn.R2Conv(in_type,  out_type, kernel_size=kernel_size, padding=kernel_size//2, stride=1, bias=False); self.relu2a = e2nn.ReLU(out_type); self.bnorm2a= e2nn.InnerBatchNorm(out_type)
+        self.conv2b = e2nn.R2Conv(out_type, out_type, kernel_size=kernel_size, padding=kernel_size//2, stride=1, bias=False); self.relu2b = e2nn.ReLU(out_type); self.bnorm2b= e2nn.InnerBatchNorm(out_type)
+        self.conv2c = e2nn.R2Conv(out_type, out_type, kernel_size=kernel_size, padding=kernel_size//2, stride=1, bias=False); self.relu2c = e2nn.ReLU(out_type); self.bnorm2c= e2nn.InnerBatchNorm(out_type)
         self.mpool2 = e2nn.PointwiseMaxPool(out_type, kernel_size=(2,2), stride=2)
 
         in_type = out_type
         out_type = e2nn.FieldType(self.r2_act, 32*[self.r2_act.trivial_repr])
-        self.conv3a = e2nn.R2Conv(in_type,  out_type, kernel_size=3, padding=1, stride=1, bias=False); self.relu3a = e2nn.ReLU(out_type); self.bnorm3a= e2nn.InnerBatchNorm(out_type)
-        self.conv3b = e2nn.R2Conv(out_type, out_type, kernel_size=3, padding=1, stride=1, bias=False); self.relu3b = e2nn.ReLU(out_type); self.bnorm3b= e2nn.InnerBatchNorm(out_type)
-        self.conv3c = e2nn.R2Conv(out_type, out_type, kernel_size=3, padding=1, stride=1, bias=False); self.relu3c = e2nn.ReLU(out_type); self.bnorm3c= e2nn.InnerBatchNorm(out_type)
+        self.conv3a = e2nn.R2Conv(in_type,  out_type, kernel_size=kernel_size, padding=kernel_size//2, stride=1, bias=False); self.relu3a = e2nn.ReLU(out_type); self.bnorm3a= e2nn.InnerBatchNorm(out_type)
+        self.conv3b = e2nn.R2Conv(out_type, out_type, kernel_size=kernel_size, padding=kernel_size//2, stride=1, bias=False); self.relu3b = e2nn.ReLU(out_type); self.bnorm3b= e2nn.InnerBatchNorm(out_type)
+        self.conv3c = e2nn.R2Conv(out_type, out_type, kernel_size=kernel_size, padding=kernel_size//2, stride=1, bias=False); self.relu3c = e2nn.ReLU(out_type); self.bnorm3c= e2nn.InnerBatchNorm(out_type)
         self.mpool3 = e2nn.PointwiseMaxPool(out_type, kernel_size=(2,2), stride=2)
 
         in_type = out_type
         out_type = e2nn.FieldType(self.r2_act, 64*[self.r2_act.trivial_repr])
-        self.conv4a = e2nn.R2Conv(in_type,  out_type, kernel_size=3, padding=1, stride=1, bias=False); self.relu4a = e2nn.ReLU(out_type); self.bnorm4a= e2nn.InnerBatchNorm(out_type)
-        self.conv4b = e2nn.R2Conv(out_type, out_type, kernel_size=3, padding=1, stride=1, bias=False); self.relu4b = e2nn.ReLU(out_type); self.bnorm4b= e2nn.InnerBatchNorm(out_type)
+        self.conv4a = e2nn.R2Conv(in_type,  out_type, kernel_size=kernel_size, padding=kernel_size//2, stride=1, bias=False); self.relu4a = e2nn.ReLU(out_type); self.bnorm4a= e2nn.InnerBatchNorm(out_type)
+        self.conv4b = e2nn.R2Conv(out_type, out_type, kernel_size=kernel_size, padding=kernel_size//2, stride=1, bias=False); self.relu4b = e2nn.ReLU(out_type); self.bnorm4b= e2nn.InnerBatchNorm(out_type)
         self.mpool4 = e2nn.PointwiseMaxPool(out_type, kernel_size=(2,2), stride=2)
 
         self.flatten = nn.Flatten(1)

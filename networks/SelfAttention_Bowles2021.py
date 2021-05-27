@@ -26,7 +26,6 @@ class AGRadGalNet(nn.Module):
         assert normalisation in ['sigmoid','range_norm','std_mean_norm','tanh','softmax'], f'Nomralisation not implemented. Can be any of: sigmoid, range_norm, std_mean_norm, tanh, softmax'
         assert AG in [0,1,2,3], f'Number of Attention Gates applied (AG) must be an integer in range [0,3]. Currently AG={AG}'
         filters = [6,16,32,64,128]
-        ksizes = [3,3,3,3,3,3] # Must all be odd for calculation of padding.
         self.attention_out_sizes = []
         self.ag = AG
         self.filters = filters
