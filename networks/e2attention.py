@@ -22,7 +22,8 @@ class DNSteerableAGRadGalNet(nn.Module):
                  quiet=True,
                  number_rotations=8,
                  imsize=150,
-                 kernel_size=3
+                 kernel_size=3,
+                 group="D"
                 ):
         super(DNSteerableAGRadGalNet, self).__init__()
         aggregation_mode = attention_aggregation
@@ -33,6 +34,7 @@ class DNSteerableAGRadGalNet(nn.Module):
         assert aggregation_mode in ['concat', 'mean', 'deep_sup', 'ft'], 'Aggregation mode not recognised. Valid inputs include concat, mean, deep_sup or ft.'
         assert normalisation in ['sigmoid','range_norm','std_mean_norm','tanh','softmax'], f'Nomralisation not implemented. Can be any of: sigmoid, range_norm, std_mean_norm, tanh, softmax'
         assert AG in [0,1,2,3], f'Number of Attention Gates applied (AG) must be an integer in range [0,3]. Currently AG={AG}'
+        assert group.lower() in ["d","c"], f"group parameter must either be 'D' for DN, or 'C' for CN, steerable networks. (currently {group})."
         filters = [6,16,32,64,128]
         
         self.attention_out_sizes = []
@@ -41,7 +43,10 @@ class DNSteerableAGRadGalNet(nn.Module):
         self.aggregation_mode = aggregation_mode
         
         # Setting up e2
-        self.r2_act = gspaces.FlipRot2dOnR2(N=8)
+        if group.lower() == "d":
+            self.r2_act = gspaces.FlipRot2dOnR2(N=number_rotations)
+        else:
+            self.r2_act = gspaces.Rot2dOnR2(N=number_rotations)
         in_type = e2nn.FieldType(self.r2_act, [self.r2_act.trivial_repr])
         out_type = e2nn.FieldType(self.r2_act, 6*[self.r2_act.trivial_repr])
         self.in_type = in_type
