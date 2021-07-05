@@ -119,3 +119,7 @@ DNSteerableAGRadGalNet,5,MLFR,random rotation,MBFRUncertain,restricted random ro
 DNSteerableAGRadGalNet,7,MLFR,random rotation,MBFRUncertain,rotation and flipping,1617,True,0.0,0.0,0.0,2500,0.4897959183673469,1.0,0.6575342465753424,2400,0.5
 DNSteerableAGRadGalNet,7,MLFR,random rotation,MBFRUncertain,random rotation,1617,True,0.0,0.0,0.0,2500,0.4897959183673469,1.0,0.6575342465753424,2400,0.5
 DNSteerableAGRadGalNet,7,MLFR,random rotation,MBFRUncertain,restricted random rotation,1617,True,0.0,0.0,0.0,2500,0.4897959183673469,1.0,0.6575342465753424,2400,0.5
+DNSteerableAGRadGalNet,5,MBFRUncertain,random rotation,MBFRUncertain,random rotation,1664,True,0.6225021720243267,0.5732,0.5968346522282383,2500,0.5892994611239415,0.6379166666666667,0.6126450580232093,2400,0.6384486666666668
+DNSteerableAGRadGalNet,5,MBFRUncertain,random rotation,MLFR,random rotation,1664,True,0.0,0.0,0.0,18000,0.2682926829268293,1.0,0.4230769230769231,6600,0.5
+DNSteerableAGRadGalNet,7,MBFRUncertain,random rotation,MBFRUncertain,random rotation,352,True,0.675,0.0432,0.08120300751879699,2500,0.49535864978902955,0.9783333333333334,0.657703081232493,2400,0.5532839999999999
+DNSteerableAGRadGalNet,7,MBFRUncertain,random rotation,MLFR,random rotation,352,True,0.0,0.0,0.0,18000,0.2682926829268293,1.0,0.4230769230769231,6600,0.5

@@ -33,7 +33,7 @@ def load(config, train=False, augmentation='config', angle=0, data_loader=False)
     train: bool
         Train (True) or test set (False) set.
     augmentation: str
-        Selection of augmentation style. 'none', 'random rotation', 
+        Selection of augmentation style. 'None', 'random rotation', 
         or other for augmentation according to config file.
     angle: float
         Specific angle for augmentation='rotation only'
@@ -46,6 +46,7 @@ def load(config, train=False, augmentation='config', angle=0, data_loader=False)
     or
     Data loader for the augmented pytorch data (tuple if train=True)
     """
+    assert augmentation in ['config', 'None', 'random rotation', 'restricted random rotation']
     # Read / Create Folder for Data to be Saved
     root = config['data']['directory']
     os.makedirs(root, exist_ok=True)
@@ -59,9 +60,8 @@ def load(config, train=False, augmentation='config', angle=0, data_loader=False)
     angles = np.linspace(0, 359, config.getint('data', 'number_rotations'))
     p_flip = 0.5 if config.getboolean('data','flip') else 0
     #augment = config.getboolean('data', 'augment')
-    augment = config['data']['augment']
-    if augment in ['None', 'random rotation', 'restricted random rotation']:
-        augmentation=augment
+    if augmentation=='config':
+        augmentation = config['data']['augment']
 
     # Create hard random (seeded) rotation:
     class RotationTransform:
@@ -125,22 +125,16 @@ def load(config, train=False, augmentation='config', angle=0, data_loader=False)
     
     download = True
     data_class = globals()[config['data']['dataset']]
-    if augmentation=='None':
-        transform = transformations[augmentation]
-    elif augmentation=='random rotation':
-        transform = transformations[augmentation]
-    elif augmentation=="restricted random rotation":
+    if augmentation in ['None', 'random rotation', 'restricted random rotation']:
         transform = transformations[augmentation]
     else:
-        if augment=='True' and p_flip==0.5:
+        if augmentation=='True' and p_flip==0.5:
             transform = transformations['rotation and flipping']
         else:
             transform = transformations['no rotation no flipping']
 
     data = data_class(root=root, download=download, train=train, transform=transform)
-    #sources = data.data
-    #labels = np.asarray(data.targets)
-    
+
     if data_loader:
         batch_size = config.getint('training', 'batch_size')
         if train:

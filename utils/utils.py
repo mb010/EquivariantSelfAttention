@@ -76,9 +76,12 @@ def plot_3(
     vmin = ['adaptive'],
     vmax = ['adaptive'],
     factors = [1, -1, 1],
-    save=''
+    save='',
+    contour=''
 ):
-
+    plt_contour=False
+    if contour!='':
+        plt_contour=True
     if len(cmaps)==1:
         cmaps *= 3
     if len(cbars_bool)==1:
@@ -116,6 +119,8 @@ def plot_3(
     im_a = ax_dict['a'].imshow(factors[0]*a, cmap=cmaps[0], vmin=-lim(vmin[0])(a), vmax=lim(vmax[0])(a), origin='lower')
     im_b = ax_dict['b'].imshow(factors[1]*b, cmap=cmaps[1], vmin=-lim(vmin[1])(b), vmax=lim(vmax[1])(b), origin='lower')
     im_c = ax_dict['c'].imshow(factors[2]*c, cmap=cmaps[2], vmin=-lim(vmin[2])(c), vmax=lim(vmax[2])(c), origin='lower')
+    if plt_contour:
+        im_contour = ax_dict['c'].contour(contour, 0, levels=[0.])
     
     ax_dict['a'].set_xticks([]); ax_dict['a'].set_yticks([])
     ax_dict['b'].set_xticks([]); ax_dict['b'].set_yticks([])

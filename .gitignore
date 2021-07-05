@@ -14,3 +14,4 @@ models/e2attention
 *.log
 logs/
 runs.sh
+figures/animation_frames
