@@ -52,13 +52,13 @@ model = utils.utils.load_model(config, load_model='best', device=device, path_su
 ```
 
 ### Testing a model: 
-Follow the example of [evaluations.ipynb](./evaluations.ipynb) for model evaluation.
+Follow the example of [evaluations.ipynb](evaluations.ipynb) for model evaluation.
 
 ### Defining a model: 
-To define your own model simply create a new config which follows the examples provided in [configs](./configs).
+To define your own model simply create a new config which follows the examples provided in [configs](configs).
 
 ### Training a model: 
-To train a model use the [train.py](./train.py) using your config file:
+To train a model use the [train.py](train.py) using your config file:
 ```
 python3.8 train.py --config YOUR_CONFIG_NAME.cfg >& logs/YOUR_CONFIG_NAME.log
 ```
