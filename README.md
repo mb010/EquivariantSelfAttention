@@ -52,7 +52,7 @@ model = utils.utils.load_model(config, load_model='best', device=device, path_su
 ```
 
 ### Testing a model: 
-Follow the example of [evaluations.ipynb](evaluations.ipynb) for model evaluation.
+Follow the example of [evaluation.ipynb](evaluation.ipynb) for model evaluation.
 
 ### Defining a model: 
 To define your own model simply create a new config which follows the examples provided in [configs](configs).
