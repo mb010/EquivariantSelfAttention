@@ -15,3 +15,4 @@ models/e2attention
 logs/
 runs.sh
 figures/animation_frames
+fisher_configs.txt

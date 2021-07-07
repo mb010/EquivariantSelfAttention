@@ -44,9 +44,9 @@ class DNSteerableAGRadGalNet(nn.Module):
         
         # Setting up e2
         if group.lower() == "d":
-            self.r2_act = gspaces.FlipRot2dOnR2(N=number_rotations)
+            self.r2_act = gspaces.FlipRot2dOnR2(N=int(number_rotations))
         else:
-            self.r2_act = gspaces.Rot2dOnR2(N=number_rotations)
+            self.r2_act = gspaces.Rot2dOnR2(N=int(number_rotations))
         in_type = e2nn.FieldType(self.r2_act, [self.r2_act.trivial_repr])
         out_type = e2nn.FieldType(self.r2_act, 6*[self.r2_act.trivial_repr])
         self.in_type = in_type

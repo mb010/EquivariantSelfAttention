@@ -31,7 +31,7 @@ np.random.seed(42)
 # Get correct device
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-# Read in config fiel
+# Read in config file
 args        = utils.parse_args()
 config_name = args['config']
 config      = ConfigParser.ConfigParser(allow_no_value=True)
@@ -59,7 +59,7 @@ if not quiet:
 train_loader, valid_loader  = utils.data.load(
     config, 
     train=True, 
-    augmentation='', 
+    augmentation='config', 
     data_loader=True
 )
 

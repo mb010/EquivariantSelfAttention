@@ -44,7 +44,7 @@ def load_model(config, load_model='best', path_supliment='', device=torch.device
     """Load in a model of choice.
     config:
     load_model: str
-        Condition for model selection
+        Specific model or a epoch number that has been saved.
     path_supliment: str
         Between output and directory name, only needed 
         for sub-grid search selection in this framework.
@@ -60,6 +60,8 @@ def load_model(config, load_model='best', path_supliment='', device=torch.device
         best = df.iloc[list(df['validation_update'])].iloc[-1]
         best_epoch = int(best.name)
         MODEL_PATH = config['output']['directory'] +'/'+ path_supliment + str(best_epoch) + '.pt'
+    else:
+        MODEL_PATH = config['output']['directory'] +'/'+ path_supliment + str(load_model) + '.pt'
     
     model = globals()[config['model']['base']](**config['model']).to(device)
     model.load_state_dict(torch.load(MODEL_PATH))
