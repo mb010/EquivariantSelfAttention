@@ -33,7 +33,8 @@ net = locals()[config['model']['base']](**config['model']).to(device)
 ```
 
 Alternatively, if you know which architecture you want to use, only import that and load in the config parameters (i.e. without using `locals()`):
-```from networks import DNSteerableAGRadGalNet
+```
+from networks import DNSteerableAGRadGalNet
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 config      = ConfigParser.ConfigParser(allow_no_value=True)
@@ -51,12 +52,13 @@ model = utils.utils.load_model(config, load_model='best', device=device, path_su
 ```
 
 ### Testing a model: 
-Follow the example of [evaluations.ipynb](./evaluations.ipynb) for model evaluation.
+Follow the example of [evaluation.ipynb](evaluation.ipynb) for model evaluation.
 
 ### Defining a model: 
-To define your own model simply create a new config which follows the examples provided in [configs](./configs).
+To define your own model simply create a new config which follows the examples provided in [configs](configs).
 
 ### Training a model: 
-To train a model use the [train.py](./train.py) using your config file:
-```python3.8 train.py --config YOUR_CONFIG_NAME.cfg >& logs/YOUR_CONFIG_NAME.log
+To train a model use the [train.py](train.py) using your config file:
+```
+python3.8 train.py --config YOUR_CONFIG_NAME.cfg >& logs/YOUR_CONFIG_NAME.log
 ```
