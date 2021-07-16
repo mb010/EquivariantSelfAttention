@@ -252,7 +252,7 @@ class DNSteerableLeNet(nn.Module):
         self.pool2 = e2nn.PointwiseMaxPoolAntialiased(out_type, kernel_size=2)
         
         self.gpool = e2nn.GroupPooling(out_type)
-
+        
         self.fc1   = nn.Linear(16*z*z, 120)
         self.fc2   = nn.Linear(120, 84)
         self.fc3   = nn.Linear(84, out_chan)
