@@ -13,6 +13,7 @@ models/tang2019
 models/e2attention
 *.log
 logs/
+*.out
 runs.sh
 figures/animation_frames
 fisher_configs.txt

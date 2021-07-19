@@ -48,7 +48,7 @@ class DNSteerableAGRadGalNet(nn.Module):
         else:
             self.r2_act = gspaces.Rot2dOnR2(N=int(number_rotations))
         in_type = e2nn.FieldType(self.r2_act, [self.r2_act.trivial_repr])
-        out_type = e2nn.FieldType(self.r2_act, 6*[self.r2_act.trivial_repr])
+        out_type = e2nn.FieldType(self.r2_act, 6*[self.r2_act.regular_repr])
         self.in_type = in_type
         
         self.mask = e2nn.MaskModule(in_type, imsize, margin=0)
@@ -56,26 +56,31 @@ class DNSteerableAGRadGalNet(nn.Module):
         self.conv1b = e2nn.R2Conv(out_type, out_type, kernel_size=kernel_size, padding=kernel_size//2, stride=1, bias=False); self.relu1b = e2nn.ReLU(out_type); self.bnorm1b= e2nn.InnerBatchNorm(out_type)
         self.conv1c = e2nn.R2Conv(out_type, out_type, kernel_size=kernel_size, padding=kernel_size//2, stride=1, bias=False); self.relu1c = e2nn.ReLU(out_type); self.bnorm1c= e2nn.InnerBatchNorm(out_type)
         self.mpool1 = e2nn.PointwiseMaxPool(out_type, kernel_size=(2,2), stride=2)
+        self.gpool1 = e2nn.GroupPooling(out_type)
+        
         
         in_type = out_type
-        out_type = e2nn.FieldType(self.r2_act, 16*[self.r2_act.trivial_repr])
+        out_type = e2nn.FieldType(self.r2_act, 16*[self.r2_act.regular_repr])
         self.conv2a = e2nn.R2Conv(in_type,  out_type, kernel_size=kernel_size, padding=kernel_size//2, stride=1, bias=False); self.relu2a = e2nn.ReLU(out_type); self.bnorm2a= e2nn.InnerBatchNorm(out_type)
         self.conv2b = e2nn.R2Conv(out_type, out_type, kernel_size=kernel_size, padding=kernel_size//2, stride=1, bias=False); self.relu2b = e2nn.ReLU(out_type); self.bnorm2b= e2nn.InnerBatchNorm(out_type)
         self.conv2c = e2nn.R2Conv(out_type, out_type, kernel_size=kernel_size, padding=kernel_size//2, stride=1, bias=False); self.relu2c = e2nn.ReLU(out_type); self.bnorm2c= e2nn.InnerBatchNorm(out_type)
         self.mpool2 = e2nn.PointwiseMaxPool(out_type, kernel_size=(2,2), stride=2)
+        self.gpool2 = e2nn.GroupPooling(out_type)
 
         in_type = out_type
-        out_type = e2nn.FieldType(self.r2_act, 32*[self.r2_act.trivial_repr])
+        out_type = e2nn.FieldType(self.r2_act, 32*[self.r2_act.regular_repr])
         self.conv3a = e2nn.R2Conv(in_type,  out_type, kernel_size=kernel_size, padding=kernel_size//2, stride=1, bias=False); self.relu3a = e2nn.ReLU(out_type); self.bnorm3a= e2nn.InnerBatchNorm(out_type)
         self.conv3b = e2nn.R2Conv(out_type, out_type, kernel_size=kernel_size, padding=kernel_size//2, stride=1, bias=False); self.relu3b = e2nn.ReLU(out_type); self.bnorm3b= e2nn.InnerBatchNorm(out_type)
         self.conv3c = e2nn.R2Conv(out_type, out_type, kernel_size=kernel_size, padding=kernel_size//2, stride=1, bias=False); self.relu3c = e2nn.ReLU(out_type); self.bnorm3c= e2nn.InnerBatchNorm(out_type)
         self.mpool3 = e2nn.PointwiseMaxPool(out_type, kernel_size=(2,2), stride=2)
+        self.gpool3 = e2nn.GroupPooling(out_type)
 
         in_type = out_type
-        out_type = e2nn.FieldType(self.r2_act, 64*[self.r2_act.trivial_repr])
+        out_type = e2nn.FieldType(self.r2_act, 64*[self.r2_act.regular_repr])
         self.conv4a = e2nn.R2Conv(in_type,  out_type, kernel_size=kernel_size, padding=kernel_size//2, stride=1, bias=False); self.relu4a = e2nn.ReLU(out_type); self.bnorm4a= e2nn.InnerBatchNorm(out_type)
         self.conv4b = e2nn.R2Conv(out_type, out_type, kernel_size=kernel_size, padding=kernel_size//2, stride=1, bias=False); self.relu4b = e2nn.ReLU(out_type); self.bnorm4b= e2nn.InnerBatchNorm(out_type)
         self.mpool4 = e2nn.PointwiseMaxPool(out_type, kernel_size=(2,2), stride=2)
+        self.gpool4 = e2nn.GroupPooling(out_type)
 
         self.flatten = nn.Flatten(1)
         self.dropout = nn.Dropout(p=0.5)
@@ -229,15 +234,21 @@ class DNSteerableAGRadGalNet(nn.Module):
         # output of given attention function is tuple: (Applied Attention , Attention map)
         if self.ag == 0: #FC layers instead of attention networks to demonstrate the differences.
             #g0 = F.adaptive_avg_pool2d(conv4b,(1,1)).view(batch_size,-1)
+            conv4b = self.gpool4(conv4b)
             mpool4 = self.mpool4(conv4b.tensor)
             out = self.aggregate(mpool4.tensor) # Is this a fair comparison?
 
         elif self.ag == 1:
+            conv4b = self.gpool4(conv4b)
+            conv3c = self.gpool3(conv3c)
             attendedConv1, atten1 = self.attention1(conv3c.tensor, conv4b.tensor)
             g1 = self.dropout(torch.sum(attendedConv1.view(batch_size, 32,-1), dim=-1))
             out = self.aggregate(g1)
 
         elif self.ag == 2:
+            conv4b = self.gpool4(conv4b)
+            conv3c = self.gpool3(conv3c)
+            conv2c = self.gpool2(conv2c)
             attendedConv1, atten1 = self.attention1(conv3c.tensor, conv4b.tensor)
             attendedConv2, atten2 = self.attention2(conv2c.tensor, conv4b.tensor)
             g1 = self.dropout(torch.sum(attendedConv1.view(batch_size, 32,-1), dim=-1))
@@ -245,6 +256,10 @@ class DNSteerableAGRadGalNet(nn.Module):
             out = self.aggregate(g1, g2)
 
         elif self.ag == 3:
+            conv4b = self.gpool4(conv4b)
+            conv3c = self.gpool3(conv3c)
+            conv2c = self.gpool2(conv2c)
+            conv1c = self.gpool1(conv1c)
             attendedConv1, atten1 = self.attention1(conv3c.tensor, conv4b.tensor)
             attendedConv2, atten2 = self.attention2(conv2c.tensor, conv4b.tensor)
             attendedConv3, atten3 = self.attention3(conv1c.tensor, conv4b.tensor)
