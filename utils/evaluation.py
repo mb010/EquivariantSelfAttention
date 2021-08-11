@@ -13,6 +13,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import configparser as ConfigParser
+from tqdm import tqdm
 
 # Import various network architectures
 from networks import AGRadGalNet, DNSteerableLeNet, DNSteerableAGRadGalNet #e2cnn module only works in python3.7+
@@ -33,7 +34,8 @@ def predict(model,
             data, 
             augmentation_loops=1, 
             raw_predictions=True,
-            device = torch.device('cpu')
+            device = torch.device('cpu'),
+            verbose=False
            ):
     """Predict on multiple passes of input images
     Args:
@@ -58,8 +60,9 @@ def predict(model,
               (augmentation_loops * total data size) if not raw_predictions
         
     """
+    f = tqdm if verbose else lambda x:x
     model = model.to(device)
-    for loop in range(augmentation_loops):
+    for loop in f(range(augmentation_loops)):
         for idx, batch in enumerate(data):
             pred = model(batch[0].to(device)).detach().cpu().numpy()
             labels = batch[1].detach().cpu().numpy()
