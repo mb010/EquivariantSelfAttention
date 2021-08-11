@@ -12,11 +12,15 @@
 echo ">>> start"
 
 echo ">>> training for fisher experiment"
+CFG=D16_attention_mirabest
+echo $CFG
+python train.py --config $CFG.cfg
 
-while read cfg; do
-    echo $cfg
-    python train.py --config $cfg.cfg
-done < fisher_configs.txt
+
+#while read cfg; do
+#    echo $cfg
+#    python train.py --config $cfg.cfg
+#done < fisher_configs.txt
 
 #echo ">>> training on mingoLoTSS"
 #python train.py --config bowles2021mingo-RandAug.cfg >& logs/bowles2021mingo-RandAug.log
