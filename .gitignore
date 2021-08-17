@@ -11,6 +11,8 @@ models/bowles2021
 models/scaife2021
 models/tang2019
 models/e2attention
+models/fisher
+models/*.tar.gz
 *.log
 logs/
 *.out
