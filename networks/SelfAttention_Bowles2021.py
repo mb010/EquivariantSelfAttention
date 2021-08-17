@@ -22,6 +22,7 @@ class AGRadGalNet(nn.Module):
         super(AGRadGalNet, self).__init__()
         aggregation_mode = attention_aggregation
         normalisation = attention_normalisation
+        kernel_size = int(kernel_size)
         AG = int(attention_gates)
         assert aggregation_mode in ['concat', 'mean', 'deep_sup', 'ft'], 'Aggregation mode not recognised. Valid inputs include concat, mean, deep_sup or ft.'
         assert normalisation in ['sigmoid','range_norm','std_mean_norm','tanh','softmax'], f'Nomralisation not implemented. Can be any of: sigmoid, range_norm, std_mean_norm, tanh, softmax'

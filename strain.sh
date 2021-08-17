@@ -6,7 +6,7 @@
 #SBATCH --mail-user=micah.bowles@postgrad.manchester.ac.uk
 #SBATCH --time=7-00:00:00
 #SBATCH --ntasks-per-node=1
-#SBATCH --cpus-per-task=1
+#SBATCH --cpus-per-task=17
 #SBATCH --no-reque
 #SBATCH --array=0-14%14
 
