@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#SBATCH --job-name=e2Training
+#SBATCH --job-name=Evaluations
 #SBATCH --constraint=A100
 #SBATCH --mail-type=END,FAIL
 #SBATCH --mail-user=micah.bowles@postgrad.manchester.ac.uk
@@ -8,8 +8,39 @@
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=1
 #SBATCH --no-reque
+#SBATCH --array=0-14%14
 
 echo ">>> start"
+### ARRAY JOBS ###
+# The selection of `--array=1-5%4` means that we run jobs with
+# array indexes 0-5 and use at most 4 nodes at once.
+# We can pass the index using the variable: `$SLURM_ARRAY_TASK_ID`
 
-echo ">>> evaluation of fisher experiment"
-python evaluate.py >& evaluate.log
+echo ">>> training for fisher experiment"
+CFGS=(
+  # Model Testing
+  '5kernel_bowles2021_mirabest_RandAug.cfg'
+  '5kernel_scaife2021_mirabest_RandAug.cfg' # How do I want to implement this?
+  '5kernel_D16_scaife2021_mirabest_RandAug.cfg'
+  '5kernel_C4_attention_mirabest_RandAug.cfg'
+  '5kernel_C8_attention_mirabest_RandAug.cfg'
+  '5kernel_C16_attention_mirabest_RandAug.cfg'
+  '5kernel_D4_attention_mirabest_RandAug.cfg'
+  '5kernel_D8_attention_mirabest_RandAug.cfg'
+  '5kernel_D16_attention_mirabest_RandAug.cfg'
+  # Kernel Testing
+  #'5kernel_bowles2021_mirabest-RandAug.cfg' # Already trained in 'Model Testing'
+  #'5kernel_scaife2021_mirabest_RandAug.cfg' # Already trained in 'Model Testing'
+  #'5kernel_D8_attention_mirabest-RandAug.cfg' # Already trained in 'Model Testing'
+  '7kernel_bowles2021_mirabest-RandAug.cfg'
+  '7kernel_scaife2021_mirabest_RandAug.cfg'
+  '7kernel_D8_attention_mirabest-RandAug.cfg'
+  '9kernel_bowles2021_mirabest-RandAug.cfg'
+  '9kernel_non-att_mirabest-RandAug.cfg'
+  '9kernel_D8_attention_mirabest-RandAug.cfg'
+)
+CFG=${CFGS[$SLURM_ARRAY_TASK_ID]}
+
+echo $CFG
+python evaluate.py --config $CFG
+python create_figures.py --config $CFG
