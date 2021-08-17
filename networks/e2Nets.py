@@ -69,7 +69,7 @@ class testNet(nn.Module):
         x = F.relu(self.fc2(x))
         x = self.drop(x)
         x = self.fc3(x)
-    
+
         return x
 
 # -----------------------------------------------------------------------------
@@ -149,13 +149,13 @@ class CNSteerableLeNet(nn.Module):
 
         out_type = e2nn.FieldType(self.r2_act, 6*[self.r2_act.regular_repr])
         self.mask = e2nn.MaskModule(in_type, imsize, margin=1)
-        self.conv1 = e2nn.R2Conv(in_type, out_type, kernel_size=5, padding=1, bias=False)
+        self.conv1 = e2nn.R2Conv(in_type, out_type, kernel_size=kernel_size, padding=1, bias=False)
         self.relu1 = e2nn.ReLU(out_type, inplace=True)
         self.pool1 = e2nn.PointwiseMaxPoolAntialiased(out_type, kernel_size=2)
 
         in_type = self.pool1.out_type
         out_type = e2nn.FieldType(self.r2_act, 16*[self.r2_act.regular_repr])
-        self.conv2 = e2nn.R2Conv(in_type, out_type, kernel_size=5, padding=1, bias=False)
+        self.conv2 = e2nn.R2Conv(in_type, out_type, kernel_size=kernel_size, padding=1, bias=False)
         self.relu2 = e2nn.ReLU(out_type, inplace=True)
         self.pool2 = e2nn.PointwiseMaxPoolAntialiased(out_type, kernel_size=2)
 
@@ -241,13 +241,13 @@ class DNSteerableLeNet(nn.Module):
 
         out_type = e2nn.FieldType(self.r2_act, 6*[self.r2_act.regular_repr])
         self.mask = e2nn.MaskModule(in_type, imsize, margin=1)
-        self.conv1 = e2nn.R2Conv(in_type, out_type, kernel_size=5, padding=1, bias=False)
+        self.conv1 = e2nn.R2Conv(in_type, out_type, kernel_size=kernel_size, padding=1, bias=False)
         self.relu1 = e2nn.ReLU(out_type, inplace=True)
         self.pool1 = e2nn.PointwiseMaxPoolAntialiased(out_type, kernel_size=2)
 
         in_type = self.pool1.out_type
         out_type = e2nn.FieldType(self.r2_act, 16*[self.r2_act.regular_repr])
-        self.conv2 = e2nn.R2Conv(in_type, out_type, kernel_size=5, padding=1, bias=False)
+        self.conv2 = e2nn.R2Conv(in_type, out_type, kernel_size=kernel_size, padding=1, bias=False)
         self.relu2 = e2nn.ReLU(out_type, inplace=True)
         self.pool2 = e2nn.PointwiseMaxPoolAntialiased(out_type, kernel_size=2)
 
@@ -320,7 +320,7 @@ class DNRestrictedLeNet(nn.Module):
 
         out_type = e2nn.FieldType(self.r2_act, 6*[self.r2_act.regular_repr])
         self.mask = e2nn.MaskModule(in_type, imsize, margin=1)
-        self.conv1 = e2nn.R2Conv(in_type, out_type, kernel_size=5, padding=1, bias=False)
+        self.conv1 = e2nn.R2Conv(in_type, out_type, kernel_size=kernel_size, padding=1, bias=False)
         self.relu1 = e2nn.ReLU(out_type, inplace=True)
         self.pool1 = e2nn.PointwiseMaxPoolAntialiased(out_type, kernel_size=2)
 
