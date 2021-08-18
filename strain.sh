@@ -8,12 +8,12 @@
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=17
 #SBATCH --no-reque
-#SBATCH --array=0-14%14
+#SBATCH --array=0-14%15
 
 echo ">>> start"
 ### ARRAY JOBS ###
 # The selection of `--array=1-5%4` means that we run jobs with
-# array indexes 0-14 and use at most 14 nodes at once.
+# array indexes 0-14 and use at most 15 nodes at once.
 # We can pass the index using the variable: `$SLURM_ARRAY_TASK_ID`
 
 echo ">>> training for fisher experiment"
