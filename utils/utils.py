@@ -18,7 +18,8 @@ import configparser as ConfigParser
 
 import utils
 # Ipmport various network architectures
-from networks import AGRadGalNet, DNSteerableLeNet, DNSteerableAGRadGalNet #e2cnn module only works in python3.7+
+from networks import AGRadGalNet, DNSteerableLeNet, DNSteerableAGRadGalNet, VanillaLeNet #e2cnn module only works in python3.7+
+from networks import
 # Import various data classes
 from datasets import FRDEEPF
 from datasets import MiraBest_full, MBFRConfident, MBFRUncertain, MBHybrid
@@ -31,9 +32,9 @@ def parse_args():
         """
     parser = argparse.ArgumentParser()
     parser.add_argument('-C','--config', default="myconfig.txt", required=True, help='Name of the input config file')
-    
+
     args, __ = parser.parse_known_args()
-    
+
     return vars(args)
 
 def load_network(config, device):
@@ -46,7 +47,7 @@ def load_model(config, load_model='best', path_supliment='', device=torch.device
     load_model: str
         Specific model or a epoch number that has been saved.
     path_supliment: str
-        Between output and directory name, only needed 
+        Between output and directory name, only needed
         for sub-grid search selection in this framework.
     device: obj
         torch device specification for initial loading of model weights.
@@ -54,7 +55,7 @@ def load_model(config, load_model='best', path_supliment='', device=torch.device
     # Load training csv
     csv_path = config['output']['directory'] +'/'+ path_supliment + config['output']['training_evaluation']
     df = pd.read_csv(csv_path)
-    
+
     if load_model=='best':
         # Extract best model
         best = df.iloc[list(df['validation_update'])].iloc[-1]
@@ -62,15 +63,15 @@ def load_model(config, load_model='best', path_supliment='', device=torch.device
         MODEL_PATH = config['output']['directory'] +'/'+ path_supliment + str(best_epoch) + '.pt'
     else:
         MODEL_PATH = config['output']['directory'] +'/'+ path_supliment + str(load_model) + '.pt'
-    
+
     model = globals()[config['model']['base']](**config['model']).to(device)
     model.load_state_dict(torch.load(MODEL_PATH))
     model.eval()
-    
+
     return model
 
 def plot_3(
-    a, b, c, 
+    a, b, c,
     cmaps=['coolwarm'],
     titles=["FRI Mean", "FRII Mean", "Difference"],
     cbars_bool=[True],
@@ -94,7 +95,7 @@ def plot_3(
         factors *= 3
     if len(vmax)==1:
         vmax *= 3
-    
+
     if len(a.shape)==3:
         factors[0]=[1]
         a /=a.max()
@@ -103,8 +104,8 @@ def plot_3(
     if len(c.shape)==3:
         c = c-c.min(axis=2, keepdims=True)
         c = c/c.max(axis=2, keepdims=True)
-    
-    
+
+
     layout = """
         abc
     """
@@ -115,23 +116,23 @@ def plot_3(
         else:
             func = lambda arr : value
         return func
-    
+
     fig = plt.figure(constrained_layout=True, figsize=figsize)
     ax_dict = fig.subplot_mosaic(layout)
     im_a = ax_dict['a'].imshow(factors[0]*a, cmap=cmaps[0], vmin=-lim(vmin[0])(a), vmax=lim(vmax[0])(a), origin='lower')
     im_b = ax_dict['b'].imshow(factors[1]*b, cmap=cmaps[1], vmin=-lim(vmin[1])(b), vmax=lim(vmax[1])(b), origin='lower')
     im_c = ax_dict['c'].imshow(factors[2]*c, cmap=cmaps[2], vmin=-lim(vmin[2])(c), vmax=lim(vmax[2])(c), origin='lower')
     if plt_contour:
-        im_contour = ax_dict['c'].contour(contour, 0, levels=[0.])
-    
+        im_contour = ax_dict['c'].contour(contour, 0, levels=[0.01])
+
     ax_dict['a'].set_xticks([]); ax_dict['a'].set_yticks([])
     ax_dict['b'].set_xticks([]); ax_dict['b'].set_yticks([])
     ax_dict['c'].set_xticks([]); ax_dict['c'].set_yticks([])
-    
+
     ax_dict['a'].set_title(f"{titles[0]}", fontsize=14)
     ax_dict['b'].set_title(f"{titles[1]}", fontsize=14)
     ax_dict['c'].set_title(f"{titles[2]}", fontsize=14)
-    
+
     if cbars_bool[0]:
         divider_a = make_axes_locatable(ax_dict['a'])
         cax_a = divider_a.append_axes('bottom', size='5%', pad=0.05)
@@ -144,12 +145,13 @@ def plot_3(
         divider_c = make_axes_locatable(ax_dict['c'])
         cax_c = divider_c.append_axes('bottom', size='5%', pad=0.05)
         fig.colorbar(im_c, cax_c, orientation='horizontal')
-    
-    
-    fig.show()
-    if save != '':
-        plt.savefig(save)
-    
+
+
+    if save == '':
+        fig.show()
+    else:
+        plt.savefig(save, transparent=True)
+
 def build_mask(s, margin=2, dtype=torch.float32):
     mask = torch.zeros(1, 1, s, s, dtype=dtype)
     c = (s-1) / 2

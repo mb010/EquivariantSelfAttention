@@ -77,7 +77,7 @@ def attentions_func(
     net,
     mean=True,
     device=torch.device('cpu'),
-    layer_name_base='compatibility_score',
+    layer_name_base='attention',
     layer_no=2):
     """
     Args:
@@ -148,11 +148,11 @@ def AttentionImagesByEpoch(
     """
     assert device in [torch.device('cpu'), torch.device('cuda')], f"Device needs to be in: [torch.device('cpu'), torch.device('cuda')]"
     assert os.path.exists(folder_name), f"Folder input {folder_name} is not a valid folder path."
-    
+
     attention_maps = []
     original_attention_maps = []
     epoch_updates = []
-    
+
     # Load in models in improving order based on the folder name
     for epoch_temp in range(epoch):
         PATH = f'{folder_name}/{epoch_temp}.pt'
@@ -167,12 +167,12 @@ def AttentionImagesByEpoch(
                 device=device,
                 layer_name_base=layer_name_base,
                 layer_no=layer_no)
-            
+
             for i in range(attentions.shape[0]):
                 # Averaged attention maps of the images selected in the cell above.
                 attention_maps.append(attentions[i])
                 # Averaged but unsampled attention maps.
-                original_attention_maps.append(original_attentions[i]) 
+                original_attention_maps.append(original_attentions[i])
                 #List of when the validation loss / attention maps were updated.
                 epoch_updates.append(epoch_temp)
 
@@ -193,7 +193,7 @@ def attention_epoch_plot(
     cmap_name='magma',
     figsize=(100,100)):
     """
-    Function for plotting clean grid of attention maps as they 
+    Function for plotting clean grid of attention maps as they
     develop throughout the learning stages.
     Args:
         The attention map data,
@@ -205,13 +205,13 @@ def attention_epoch_plot(
     Out:
         plt of images concatenated in correct fashion
     """
-    
+
     # cmap_name and RGB potential
     if cmap_name=='RGB':
         mean_ = False
         cmap_name='magma'
-    
-    
+
+
     # Generate attention maps for each available Epoch
     attention_maps_temp, og_attention_maps, epoch_labels = AttentionImagesByEpoch(
         source_images,
@@ -223,7 +223,7 @@ def attention_epoch_plot(
         layer_no=layer_no,
         mean=mean_
     )
-    
+
     # Extract terms to be used in plotting
     sample_number = source_images.shape[0]
     no_saved_attentions_epochs = np.asarray(attention_maps_temp).shape[0]//sample_number

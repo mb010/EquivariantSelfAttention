@@ -15,7 +15,7 @@ import configparser as ConfigParser
 
 import utils
 # Ipmport various network architectures
-from networks import AGRadGalNet, DNSteerableLeNet, DNSteerableAGRadGalNet #e2cnn module only works in python3.7+
+from networks import AGRadGalNet, DNSteerableLeNet, DNSteerableAGRadGalNet, VanillaLeNet #e2cnn module only works in python3.7+
 # Import various data classes
 from datasets import FRDEEPF
 from datasets import MiraBest_full, MBFRConfident, MBFRUncertain, MBHybrid
@@ -23,21 +23,29 @@ from datasets import MingoLoTSS, MLFR, MLFRTest
 
 from sklearn.metrics import classification_report, roc_curve, auc
 
-# Figures to save:
-mp4_plot           = True
-distribution_plots = True
-training_plot      = True
-individual_plot    = True
-
+################################################################################
 # Parse config
 args        = utils.parse_args()
 config_name = args['config']
 config      = ConfigParser.ConfigParser(allow_no_value=True)
 config.read(f"configs/{config_name}")
 
+# Selecting figures to save:
+if config['model']['base'] in ['DNSteerableAGRadGalNet', 'AGRadGalNet']:
+    mp4_plot           = True
+    distribution_plots = True
+    individual_plot    = True
+    training_plot      = True
+else:
+    mp4_plot           = False
+    distribution_plots = False
+    individual_plot    = False
+    training_plot      = True
+
 # Set seeds for reproduceability
 torch.manual_seed(42)
 np.random.seed(42)
+
 # Get correct device
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -54,12 +62,13 @@ augmentations = [
     "restricted random rotation"
 ]
 
+# Extract paths
 FIG_PATH = config['output']['directory'] +'/'+ config['data']['augment'] +'/'
 csv_path = config['output']['directory'] +'/'+ config['data']['augment'] +'/'+ config['output']['training_evaluation']
 df = pd.read_csv(csv_path)
 best = df.iloc[list(df['validation_update'])].iloc[-1]
 # Is this my primary load call? Why am I not using utils.load_model:
-#model = utils.utils.load_model(config, load_model='best', device=device, path_supliment=path_supliment)
+
 
 # Extract models kernel size
 if config.has_option('model', 'kernel_size'):
@@ -69,8 +78,18 @@ elif "LeNet" in config['model']['base']:
 else:
     kernel_size = 3
 
-net = locals()[config['model']['base']](**config['model']).to(device)
+#net = locals()[config['model']['base']](**config['model']).to(device)
+path_supliment = config['data']['augment']
+model = utils.utils.load_model(config, load_model='best', device=device, path_supliment=path_supliment)
 
+# Define interesting sources for each data set_title
+interesting_sources_dict = {
+    'MBFRUncertain': [3,32,30],
+    'MLFR': [8,16,30],
+    'MBFRUncertain_labels': [0,1,1],
+    'MLFR_labels': [0,1,0]
+}
+test_data =
 ################################################################################
 ### Pixel Attention Distribution ###
 # Find or remake code for distrubtion of pixel values.
@@ -78,48 +97,53 @@ net = locals()[config['model']['base']](**config['model']).to(device)
 ################################################################################
 ### MP4 Figure ###
 # Make 2d figure for MP4 equivalent explanation for a paper.
-# (Compare with Anna's papers & FAIR ViT papers?)
-
+# (Compare with Scaife2021 paper & FAIR ViT papers?)
 
 ################################################################################
 ### Individual Source Maps ###
-# Select interesting / exemplative sources (in test set) for each data set
-# Plot throughout training - Probably encompases the most information.
 # Plot individually
 if individual_plot:
-    interesting_sources_dict = {
-        'mirabest': [3,32,30],
-        'mingo': [8,16,30],
-        'mirabest_labels': [0,1,1],
-        'mingo_labels': [0,1,0]
-    }
-    for cfg in data_configs:
-        for data_name in ['mirabest', 'mingo']:
-            if data_name in cfg:
-                sources_of_interest = interesting_sources_dict[data_name]
-        test_data = utils.data.load(config, train=False, augmentation='None', data_loader=False)    # Prepare sources and labels
-        for i in sources_of_interest:
-            amaps, amap_originals = utils.attention.attentions_func(
-                    rotated_input,
-                    model,
-                    device=device,
-                    layer_no=3,
-                    layer_name_base='attention',
-                    mean=mean
-            )
-            fig, ax = plt.subplots(1, 2, figsize=(8,8), fontsize=16)
-            ax[0].imshow(test_data[i])
-            ax[0].set_xticks([])
-            ax[0].set_yticks([])
+    data_name = config['data']['dataset']
+    sources_of_interest = interesting_sources_dict[data_name]
 
-            test_data[i]
+    test_data = utils.data.load(config, train=False, augmentation='None', data_loader=False)    # Prepare sources and labels
+    for i in sources_of_interest:
+        amaps, amap_originals = utils.attention.attentions_func(
+                test_data.data[i].reshape(1,1,150,150),
+                model,
+                mean=True,
+                device=device,
+                layer_no=3,
+                layer_name_base='attention'
+        )
+        raw_predictions_ = model(test_data.data[i].reshape(1,1,150,150).to(device))
+        raw_predictions = raw_predictions_.cpu().detach().numpy()
+        pred = raw_predictions.argmax(axis=1)
+
+        fig, ax = plt.subplots(1, 2, figsize=(16,9), fontsize=16, set_tight_layout=True)
+
+        ax[0].imshow(test_data.data[i].squeeze(), cmap='greys')
+        ax[0].contour(np.where(test_data.data[i].squeeze()>0,1,0), cmap='cool')
+        ax[0].set_xticks([])
+        ax[0].set_yticks([])
+        ax[0].set_title(fr'Example FR{test_data[1][i]} Source')
+
+        ax[1].imshow(amaps[0].squeeze(), cmap='magma')
+        ax[1].contour(np.where(test_data.data[i].squeeze()>0,1,0), cmap='cool')
+        ax[1].set_xticks([])
+        ax[1].set_yticks([])
+        ax[1].set_title(fr'Mean Attention Map (Pred: FR{pred[0]+1})')
+
+        plt.savefig(
+            FIG_PATH+f'{data_name}_source_{i}.png',
+            transparent=True
+        )
 
 ################################################################################
 ### MP4 ###
-# Select at most 2 sources for each data set to set an example
 # https://github.com/QUVA-Lab/e2cnn/blob/master/visualizations/animation.py
 if mp4_plot:
-    pass    import numpy as np
+    import numpy as np
     from e2cnn.nn import *
     from e2cnn.group import *
     from e2cnn.gspaces import *
@@ -137,10 +161,6 @@ if mp4_plot:
 
     plt.rcParams['image.cmap'] = 'magma'
     plt.rcParams['axes.titlepad'] = 30
-
-
-    # the irrep of frequency 1 of SO(2) produces the usual 2x2 rotation matrices
-    rot_matrix = SO2(1).irrep(1)
 
     def draw_scalar_field(axs, scalarfield, r: int, contour):
         r'''
@@ -184,7 +204,6 @@ if mp4_plot:
                     mask[..., x, y] = 1.
         return mask
 
-
     def domask(x: Union[np.ndarray, torch.Tensor], margin=2, fmt="torch"):
         if fmt == "image":
             s = x.shape[0]
@@ -199,7 +218,6 @@ if mp4_plot:
 
         # use an inverse mask to create a white background (value = 1) instead of a black background (value = 0)
         return mask * x + 1. - mask
-
 
     def animate(model: EquivariantModule,
                 image: Union[str, np.ndarray],
@@ -356,83 +374,52 @@ if mp4_plot:
 
             fig.set_tight_layout(True)
             plt.savefig(outfile.replace("*", n))
+
     output = "scalar"
 
-    # Load in my equivariant model
-    cfg = "5kernel_e2attentionmingo-RandAug.cfg"
-    cfg = "C8_attention_mirabest.cfg"
-    cfg = "configs/"+cfg
-    config = ConfigParser.ConfigParser(allow_no_value=True)
-    config.read(cfg)
-    path_supliment = config['data']['augment']
-    if path_supliment in ['True', 'False']:
-        path_supliment=''
-    else:
-        path_supliment+='/'
-    model = utils.utils.load_model(config, load_model='best', device=device, path_supliment=path_supliment)
-
-    # Load in test data / image
-    interesting_sources = [ # Must be sorted by total number for correct labelling [batch no, source no within given batch]
-        [0,12],
-        [0,13],
-        [1,0],
-        [1,5],
-        [1,13],
-        [1,14],
-        [5,10]
-    ]
-
-    interesting_sources = [
-        [1,0]
-    ]
-
-    interesting_sources = [
-        [0,0],
-        [0,3]
-    ]
-
+    # Produce images for both dataset sources
     imgs = []
     labels = []
-    test_data_loader = utils.data.load(config, train=False, augmentation='None', data_loader=True)    # Prepare sources and labels
-    for idx, (test_data, l) in enumerate(test_data_loader):
-        for idy, img in enumerate(test_data):
-            if [idx,idy] in interesting_sources:
-                imgs.append(img)
-                labels.append(l[idy])
+    data_name = config['data']['dataset']
+    test_data = utils.data.load(config, train=False, augmentation='None', data_loader=True)    # Prepare sources and labels
+    for i in sources_of_interest:
+        imgs.append(test_data.data[i].squeeze())
+        labels.append(test_data.targets[i].squeeze())
 
     frames = 24*6
     gif_duration_s = 6
     duration = gif_duration_s/frames*1000 # duration of single image within gif (ms)
 
-    completed = []
-    for idx, image in enumerate(imgs):
-        for color in ['']:#,'RGB']:
-            source_no = 16*interesting_sources[idx][0] + interesting_sources[idx][1]
+    for source_no in sources_of_interest:
+        image = test_data.data[source_no].squeeze()
+        label = test_data.targets[source_no].squeeze()
+        for color in ['', 'RGB']:
             RGB_ = True if color=='RGB' else False
-            if source_no in completed:
-                pass
-            else:
-                print(f"starting for source {source_no} {color}")
-                out_path = f"/raid/scratch/mbowles/EquivariantSelfAttention/figures/animation_frames/{color}amap_e2MiraBest{source_no}_FR{labels[idx]+1}_*.png"
-                # build the animation
-                animate(model, image, out_path, draw_scalar_field, R=frames, S=150, RGB=RGB_)
 
-                # produce final video using ffmpeg command:
-                #ffmpeg -framerate 24 -i animation_frames/amap_MingoLotSS16_FR2_%03d.png -pix_fmt yuv420p FILE_NAME.mp4
-                #fp_out = f"/raid/scratch/mbowles/EquivariantSelfAttention/figures/{color}amap_MingoLotSS{source_no}_FR{labels[idx]+1}.gif"
-                # https://pillow.readthedocs.io/en/stable/handbook/image-file-formats.html#gif
-                #img, *imgs = [Image.open(f) for f in sorted(glob.glob(out_path))]
-                #img.save(fp=fp_out, format='GIF', append_images=imgs,
-                #         save_all=True, duration=duration, loop=0)
+            print(f"MP4 image creation starting for {color}source {source_no}")
+            out_path = FIG_PATH+f"{data_name}_{source_no}{color}_FR{label+1}_*.png"
+            # build the frames
+            os.makedirs(root, exist_ok=True)
+            animate(model, image, out_path, draw_scalar_field, R=frames, S=150, RGB=RGB_)
+
+            # produce final video using ffmpeg command:
+            #ffmpeg -framerate 24 -i animation_frames/amap_MingoLotSS16_FR2_%03d.png -pix_fmt yuv420p FILE_NAME.mp4
+            #fp_out = f"/raid/scratch/mbowles/EquivariantSelfAttention/figures/{color}amap_MingoLotSS{source_no}_FR{labels[idx]+1}.gif"
+            # https://pillow.readthedocs.io/en/stable/handbook/image-file-formats.html#gif
+            #img, *imgs = [Image.open(f) for f in sorted(glob.glob(out_path))]
+            #img.save(fp=fp_out, format='GIF', append_images=imgs,
+            #         save_all=True, duration=duration, loop=0)
 
 
 ################################################################################
 ### Various Distribution Plots ###
 # Decide on exact format for all calls. Maybe cmap='seismic' (harder split)
-# Add save path parameter to call
 # Add plot_confusion_matrix to call (distributions)
 if distribution_plots:
+
     repititions = 72
+    test_data = utils.data.load(config, train=False, augmentation='None', data_loader=True)    # Prepare sources and labels
+    data_name = config['data']['dataset']
 
     # Load in model
     path_supliment = config['data']['augment']
@@ -442,7 +429,7 @@ if distribution_plots:
         path_supliment+='/'
 
     # Load in data
-    test_data_loader = utils.data.load(data_config, train=False, augmentation='random rotation', data_loader=True)    # Prepare sources and labels
+    test_data_loader = utils.data.load(cfg, train=False, augmentation='random rotation', data_loader=True)    # Prepare sources and labels
     for idx, r in tqdm(enumerate(range(repititions))):
         for idy, (test_data, l) in enumerate(test_data_loader):
             # Produce Attention Maps
@@ -486,48 +473,52 @@ if distribution_plots:
 
 
     # Attention Map Differences
-    plot_3(
+    utils.utils.plot_3(
         fri_amap_sum.mean(0)*mask, frii_amap_sum.mean(0)*mask, fr_amap_diff.mean(0)*mask,
-        cmaps=['coolwarm'], titles=["Attention FRI Mean", "Attention FRII Mean", "Attention Difference"],
+        cmaps=['seismic'], titles=["Attention FRI Mean", "Attention FRII Mean", "Attention Difference"],
         cbars_bool=[True], figsize=(16,9),
         vmin=['adaptive', 'adaptive', "adaptive"],
         vmax=['adaptive', 'adaptive', "adaptive"],
-        contour=fr_source_diff.squeeze()*mask
+        contour=fr_source_diff.squeeze()*mask,
+        save=FIG_PATH+f"amap_distr_{data_name}_AG.png"
     )
     # Attention Map Differences by Gate
-    plot_3(
+    utils.utils.plot_3(
         fri_amap_sum[0]*mask,
         frii_amap_sum[0]*mask,
         fr_amap_diff[0]*mask,
-        cmaps=['coolwarm'],
+        cmaps=['seismic'],
         titles=["Attention FRI[0] Mean", "Attention FRII[0] Mean", "Attention Difference[0]"],
         cbars_bool=[True], figsize=(16,9),
         vmin=['adaptive', 'adaptive', "adaptive"],
         vmax=['adaptive', 'adaptive', "adaptive"],
-        contour=fr_source_diff.squeeze()*mask
+        contour=fr_source_diff.squeeze()*mask,
+        save=FIG_PATH+f"amap_distr_{data_name}_AG1.png"
     )
-    plot_3(
+    utils.utils.plot_3(
         fri_amap_sum[1]*mask,
         frii_amap_sum[1]*mask,
         fr_amap_diff[1]*mask,
-        cmaps=['coolwarm'],
+        cmaps=['seismic'],
         titles=["Attention FRI[1] Mean", "Attention FRII[1] Mean", "Attention Difference[1]"],
         cbars_bool=[True], figsize=(16,9),
         vmin=['adaptive', 'adaptive', "adaptive"],
         vmax=['adaptive', 'adaptive', "adaptive"],
-        contour=fr_source_diff.squeeze()*mask
+        contour=fr_source_diff.squeeze()*mask,
+        save=FIG_PATH+f"amap_distr_{data_name}_AG2.png"
     )
-    plot_3(
+    utils.utils.plot_3(
         fri_amap_sum[2]*mask,
         frii_amap_sum[2]*mask,
         fr_amap_diff[2]*mask,
-        cmaps=['coolwarm'],
+        cmaps=['seismic'],
         titles=["Attention FRI[2] Mean", "Attention FRII[2] Mean", "Attention Difference[2]"],
         cbars_bool=[True],
         figsize=(16,9),
         vmin=['adaptive', 'adaptive', "adaptive"],
         vmax=['adaptive', 'adaptive', "adaptive"],
-        contour=fr_source_diff.squeeze()*mask
+        contour=fr_source_diff.squeeze()*mask,
+        save=FIG_PATH+f"amap_distr_{data_name}_AG3.png"
     )
 
 ################################################################################
@@ -535,67 +526,22 @@ if distribution_plots:
 # Change decimal places in title value
 # Add save path parameter to call
 if training_plot:
-    ylim = [0,1]
-    ylim = None
+    ylim = None # Otherwise something like [0,1] makes sense.
     window_size=10
 
-    for config_name_ in config_names:
-        config_name = "configs/"+config_name_
+    path_supliment = config['data']['augment']
+    if path_supliment in ['True', 'False']:
+        path_supliment=''
+    else:
+        path_supliment += '/'
 
-        config = ConfigParser.ConfigParser(allow_no_value=True)
-        config.read(config_name)
-
-        path_supliment = config['data']['augment']
-        if path_supliment in ['True', 'False']:
-            path_supliment=''
-        else:
-            path_supliment += '/'
-
-        utils.evaluation.training_plot(
-            config,
-            ylim=ylim,
-            plot=['training_loss', 'validation_loss', 'accuracy'],
-            lr_modifier=1,
-            path_supliment=path_supliment,
-            mean=True,
-            window_size=window_size
-        )
-
-### evaluation ###
-"""for d_cfg in data_configs:
-    for augmentation in augmentations:
-        path_supliment = config['data']['augment']+'/'
-        model = utils.utils.load_model(config, load_model='best', device=device, path_supliment=path_supliment)
-        data_config.read('configs/'+d_cfg)
-        print(f"Evaluating {cfg}: {config['output']['directory']}/{config['data']['augment']}\t{data_config['data']['dataset']}\t{augmentation}")
-        data  = utils.data.load(
-            data_config,
-            train=False,
-            augmentation=augmentation,
-            data_loader=True
-        )
-
-        y_pred, y_labels = utils.evaluation.predict(
-            model,
-            data,
-            augmentation_loops=100,
-            raw_predictions=True,
-            device=device,
-            verbose=True
-        )
-
-        utils.evaluation.save_evaluation(
-            y_pred,
-            y_labels,
-            model_name=config['model']['base'],
-            kernel_size=kernel_size,
-            train_data=config['data']['dataset'],
-            train_augmentation=config['data']['augment'],
-            test_data=data_config['data']['dataset'],
-            test_augmentation=augmentation,
-            epoch=int(best.name),
-            best=True,
-            raw=False,
-            PATH='/share/nas/mbowles/EquivariantSelfAttention/' + config['output']['directory'] +'/'+ config['data']['augment']
-        )
-"""
+    utils.evaluation.training_plot(
+        config,
+        ylim=ylim,
+        plot=['training_loss', 'validation_loss', 'accuracy'],
+        lr_modifier=1,
+        path_supliment=path_supliment, ### CHECK THIS PATH WOULD BE THE SAME AS THE ONE I HAVE NOW DEFINED!
+        mean=True,
+        window_size=window_size,
+        save=FIG_PATH + f"training.png"
+    )
