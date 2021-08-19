@@ -13,14 +13,16 @@ class AGRadGalNet(nn.Module):
                  base = 'AGRadGalNet',
                  attention_module='SelfAttention',
                  attention_gates=3,
-                 attention_aggregation='ft', 
-                 n_classes=2, 
+                 attention_aggregation='ft',
+                 n_classes=2,
                  attention_normalisation='sigmoid',
-                 quiet=True
+                 quiet=True,
+                 kernel_size=3
                 ):
         super(AGRadGalNet, self).__init__()
         aggregation_mode = attention_aggregation
         normalisation = attention_normalisation
+        kernel_size = int(kernel_size)
         AG = int(attention_gates)
         assert aggregation_mode in ['concat', 'mean', 'deep_sup', 'ft'], 'Aggregation mode not recognised. Valid inputs include concat, mean, deep_sup or ft.'
         assert normalisation in ['sigmoid','range_norm','std_mean_norm','tanh','softmax'], f'Nomralisation not implemented. Can be any of: sigmoid, range_norm, std_mean_norm, tanh, softmax'
@@ -31,23 +33,23 @@ class AGRadGalNet(nn.Module):
         self.filters = filters
         self.aggregation_mode = aggregation_mode
 
-        self.conv1a = nn.Conv2d(in_channels=1, out_channels=6, kernel_size=3, padding=1, stride=1); self.relu1a = nn.ReLU(); self.bnorm1a= nn.BatchNorm2d(6)
-        self.conv1b = nn.Conv2d(in_channels=6, out_channels=6, kernel_size=3, padding=1, stride=1); self.relu1b = nn.ReLU(); self.bnorm1b= nn.BatchNorm2d(6)
-        self.conv1c = nn.Conv2d(in_channels=6, out_channels=6, kernel_size=3, padding=1, stride=1); self.relu1c = nn.ReLU(); self.bnorm1c= nn.BatchNorm2d(6)
+        self.conv1a = nn.Conv2d(in_channels=1, out_channels=6, kernel_size=kernel_size, padding=kernel_size//2, stride=1); self.relu1a = nn.ReLU(); self.bnorm1a= nn.BatchNorm2d(6)
+        self.conv1b = nn.Conv2d(in_channels=6, out_channels=6, kernel_size=kernel_size, padding=kernel_size//2, stride=1); self.relu1b = nn.ReLU(); self.bnorm1b= nn.BatchNorm2d(6)
+        self.conv1c = nn.Conv2d(in_channels=6, out_channels=6, kernel_size=kernel_size, padding=kernel_size//2, stride=1); self.relu1c = nn.ReLU(); self.bnorm1c= nn.BatchNorm2d(6)
         self.mpool1 = nn.MaxPool2d(kernel_size=(2,2), stride=2)
 
-        self.conv2a = nn.Conv2d(in_channels=6, out_channels=16, kernel_size=3, padding=1, stride=1); self.relu2a = nn.ReLU(); self.bnorm2a= nn.BatchNorm2d(16)
-        self.conv2b = nn.Conv2d(in_channels=16, out_channels=16, kernel_size=3, padding=1, stride=1); self.relu2b = nn.ReLU(); self.bnorm2b= nn.BatchNorm2d(16)
-        self.conv2c = nn.Conv2d(in_channels=16, out_channels=16, kernel_size=3, padding=1, stride=1); self.relu2c = nn.ReLU(); self.bnorm2c= nn.BatchNorm2d(16)
+        self.conv2a = nn.Conv2d(in_channels=6, out_channels=16, kernel_size=kernel_size, padding=kernel_size//2, stride=1); self.relu2a = nn.ReLU(); self.bnorm2a= nn.BatchNorm2d(16)
+        self.conv2b = nn.Conv2d(in_channels=16, out_channels=16, kernel_size=kernel_size, padding=kernel_size//2, stride=1); self.relu2b = nn.ReLU(); self.bnorm2b= nn.BatchNorm2d(16)
+        self.conv2c = nn.Conv2d(in_channels=16, out_channels=16, kernel_size=kernel_size, padding=kernel_size//2, stride=1); self.relu2c = nn.ReLU(); self.bnorm2c= nn.BatchNorm2d(16)
         self.mpool2 = nn.MaxPool2d(kernel_size=(2,2), stride=2)
 
-        self.conv3a = nn.Conv2d(in_channels=16, out_channels=32, kernel_size=3, padding=1, stride=1); self.relu3a = nn.ReLU(); self.bnorm3a= nn.BatchNorm2d(32)
-        self.conv3b = nn.Conv2d(in_channels=32, out_channels=32, kernel_size=3, padding=1, stride=1); self.relu3b = nn.ReLU(); self.bnorm3b= nn.BatchNorm2d(32)
-        self.conv3c = nn.Conv2d(in_channels=32, out_channels=32, kernel_size=3, padding=1, stride=1); self.relu3c = nn.ReLU(); self.bnorm3c= nn.BatchNorm2d(32)
+        self.conv3a = nn.Conv2d(in_channels=16, out_channels=32, kernel_size=kernel_size, padding=kernel_size//2, stride=1); self.relu3a = nn.ReLU(); self.bnorm3a= nn.BatchNorm2d(32)
+        self.conv3b = nn.Conv2d(in_channels=32, out_channels=32, kernel_size=kernel_size, padding=kernel_size//2, stride=1); self.relu3b = nn.ReLU(); self.bnorm3b= nn.BatchNorm2d(32)
+        self.conv3c = nn.Conv2d(in_channels=32, out_channels=32, kernel_size=kernel_size, padding=kernel_size//2, stride=1); self.relu3c = nn.ReLU(); self.bnorm3c= nn.BatchNorm2d(32)
         self.mpool3 = nn.MaxPool2d(kernel_size=(2,2), stride=2)
 
-        self.conv4a = nn.Conv2d(in_channels=32, out_channels=64, kernel_size=3, padding=1, stride=1); self.relu4a = nn.ReLU(); self.bnorm4a= nn.BatchNorm2d(64)
-        self.conv4b = nn.Conv2d(in_channels=64, out_channels=64, kernel_size=3, padding=1, stride=1); self.relu4b = nn.ReLU(); self.bnorm4b= nn.BatchNorm2d(64)
+        self.conv4a = nn.Conv2d(in_channels=32, out_channels=64, kernel_size=kernel_size, padding=kernel_size//2, stride=1); self.relu4a = nn.ReLU(); self.bnorm4a= nn.BatchNorm2d(64)
+        self.conv4b = nn.Conv2d(in_channels=64, out_channels=64, kernel_size=kernel_size, padding=kernel_size//2, stride=1); self.relu4b = nn.ReLU(); self.bnorm4b= nn.BatchNorm2d(64)
         self.mpool4 = nn.MaxPool2d(kernel_size=(2,2), stride=2)
 
         self.flatten = nn.Flatten(1)
@@ -313,7 +315,7 @@ class GridAttentionBlock2D(nn.Module): #Cleaned up from _GridAttentionBlockND_TO
         input_size = x.size()
         batch_size = input_size[0]
         assert batch_size == g.size(0)
-        
+
         # Compute compatibility score: psi_f
         #print(x.size())
         theta_x = self.theta(x)

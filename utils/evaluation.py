@@ -30,9 +30,9 @@ torch.manual_seed(42)
 np.random.seed(42)
 
 # ==========================================================
-def predict(model, 
-            data, 
-            augmentation_loops=1, 
+def predict(model,
+            data,
+            augmentation_loops=1,
             raw_predictions=True,
             device = torch.device('cpu'),
             verbose=False
@@ -46,9 +46,9 @@ def predict(model,
     augmentation_loops: int
         Number of passes over whole data sample.
     raw_predictions: boolean
-        Condition to output list of bits (False) or 
+        Condition to output list of bits (False) or
         tuples of predictions with dimensions for each pass (True).
-    
+
     Outputs:
     y_pred: np.array
         Models output for given input source
@@ -58,7 +58,7 @@ def predict(model,
         Data labels corresponding to predictions
         Size: (augmentation_loops, total data size) if raw_predictions
               (augmentation_loops * total data size) if not raw_predictions
-        
+
     """
     f = tqdm if verbose else lambda x:x
     model = model.to(device)
@@ -78,29 +78,29 @@ def predict(model,
         else:
             y_pred = np.append(y_pred, np.expand_dims(batch_pred, axis=0), axis=0)
             y_labels = np.append(y_labels, np.expand_dims(batch_labels, axis=0), axis=0)
-    
+
     if not raw_predictions:
         y_pred = list(y_pred.argmax(axis=2).flatten())
         y_labels = list(y_labels.flatten())
     return y_pred, y_labels
 
 # ==========================================================
-def save_evaluation(y_pred, 
-                    y_labels, 
-                    model_name='', 
+def save_evaluation(y_pred,
+                    y_labels,
+                    model_name='',
                     kernel_size=3,
-                    test_data='', 
-                    test_augmentation='', 
-                    train_data='', 
-                    train_augmentation='', 
+                    test_data='',
+                    test_augmentation='',
+                    train_data='',
+                    train_augmentation='',
                     epoch=np.nan,
                     best=False,
-                    raw=False, 
+                    raw=False,
                     PATH='./',
                     print_report = False
                    ):
-    """Calculates evaluation metrics according 
-    to provided predictions and data labels 
+    """Calculates evaluation metrics according
+    to provided predictions and data labels
     and saves them to a csv.
     """
     if raw:
@@ -151,27 +151,26 @@ def save_evaluation(y_pred,
             df.to_csv(PATH+"full_evaluations.csv", mode='a', index=False, header=False)
         else:
             df.to_csv(PATH+"full_evaluations.csv", mode='w', index=False, header=True)
-            
+
 # ==========================================================
 def training_plot(
-    config, plot='', 
-    path_supliment='', 
-    marker='o', 
-    alpha=0.7, 
-    lr_modifier=1, 
-    fontsize=20, 
-    ylim=None, 
-    mean=False, 
-    window_size=1):
-    
-    if plot == '':
-        plot = ['validation_loss', 'training_loss', 'accuracy']
-    
+    config,
+    plot=['validation_loss', 'training_loss', 'accuracy'],
+    path_supliment='',
+    marker='o',
+    alpha=0.7,
+    lr_modifier=1,
+    fontsize=20,
+    ylim=None,
+    mean=False,
+    window_size=1,
+    save=False):
+
     csv_path = config['output']['directory'] +'/'+ path_supliment + config['output']['training_evaluation']
     df = pd.read_csv(csv_path)
     epochs = np.asarray(range(len(df)))
     accuracy = (df.TP + df.TN)/(df.TP+df.TN + df.FP+df.FN)
-    
+
     plt.rcParams.update({'font.size': fontsize})
     fig, ax = plt.subplots(figsize=(16,9))
     ax.grid()
@@ -205,13 +204,17 @@ def training_plot(
         if 'accuracy' in plot:
             model_acc = accuracy[df['validation_loss'].idxmin]
             ax.scatter(epochs, accuracy, label=f"Validation Acc. ({model_acc*100:.0f}%)", marker=marker, alpha=0.7)
-        
-    ax.set_title(f"{config['model']['base']} w. {config['data']['dataset']}: {config['training']['optimizer']} @{config.getfloat('training', 'learning_rate')*lr_modifier}")
+
+    ax.set_title(f"{config['model']['base']} w. {config['data']['dataset']}: {config['training']['optimizer']} @{config.getfloat('training', 'learning_rate')*lr_modifier:.1E}")
     if ylim:
         ax.set_ylim(ylim)
     ax.legend()
-    fig.show()
-    
+
+    if save:
+        plt.figsave(save, transparent=True)
+    else:
+        fig.show()
+
 # ==========================================================
 # ROC Curve
 def plot_roc_curve(fpr, tpr, title=None):
@@ -236,7 +239,7 @@ def plot_conf_mat(conf_matrix, normalised=True, n_classes=2, format_input=None, 
     # Following along the lines of (from the github on 29.04.2020)
     # https://scikit-learn.org/stable/auto_examples/model_selection/plot_confusion_matrix.html
     plt.rcParams.update({'font.size': 14})
-    
+
     classes = ['FRI','FRII']
     xticks_rotation='horizontal'
     matrix = conf_matrix.copy() #Otherwise can change matrix inplace, which is undesirable for potential further processing.
@@ -278,6 +281,6 @@ def plot_conf_mat(conf_matrix, normalised=True, n_classes=2, format_input=None, 
     plt.setp(ax.get_xticklabels(), rotation=xticks_rotation)
     plt.title(title)
     plt.show()
-    
+
     if save!='':
         plt.savefig(save)

@@ -16,8 +16,8 @@ class DNSteerableAGRadGalNet(nn.Module):
                  base = 'DNSteerableAGRadGalNet',
                  attention_module='SelfAttention',
                  attention_gates=3,
-                 attention_aggregation='ft', 
-                 n_classes=2, 
+                 attention_aggregation='ft',
+                 n_classes=2,
                  attention_normalisation='sigmoid',
                  quiet=True,
                  number_rotations=8,
@@ -36,12 +36,12 @@ class DNSteerableAGRadGalNet(nn.Module):
         assert AG in [0,1,2,3], f'Number of Attention Gates applied (AG) must be an integer in range [0,3]. Currently AG={AG}'
         assert group.lower() in ["d","c"], f"group parameter must either be 'D' for DN, or 'C' for CN, steerable networks. (currently {group})."
         filters = [6,16,32,64,128]
-        
+
         self.attention_out_sizes = []
         self.ag = AG
         self.filters = filters
         self.aggregation_mode = aggregation_mode
-        
+
         # Setting up e2
         if group.lower() == "d":
             self.r2_act = gspaces.FlipRot2dOnR2(N=int(number_rotations))
@@ -50,15 +50,15 @@ class DNSteerableAGRadGalNet(nn.Module):
         in_type = e2nn.FieldType(self.r2_act, [self.r2_act.trivial_repr])
         out_type = e2nn.FieldType(self.r2_act, 6*[self.r2_act.regular_repr])
         self.in_type = in_type
-        
+
         self.mask = e2nn.MaskModule(in_type, imsize, margin=0)
         self.conv1a = e2nn.R2Conv(in_type,  out_type, kernel_size=kernel_size, padding=kernel_size//2, stride=1, bias=False); self.relu1a = e2nn.ReLU(out_type); self.bnorm1a= e2nn.InnerBatchNorm(out_type)
         self.conv1b = e2nn.R2Conv(out_type, out_type, kernel_size=kernel_size, padding=kernel_size//2, stride=1, bias=False); self.relu1b = e2nn.ReLU(out_type); self.bnorm1b= e2nn.InnerBatchNorm(out_type)
         self.conv1c = e2nn.R2Conv(out_type, out_type, kernel_size=kernel_size, padding=kernel_size//2, stride=1, bias=False); self.relu1c = e2nn.ReLU(out_type); self.bnorm1c= e2nn.InnerBatchNorm(out_type)
         self.mpool1 = e2nn.PointwiseMaxPool(out_type, kernel_size=(2,2), stride=2)
         self.gpool1 = e2nn.GroupPooling(out_type)
-        
-        
+
+
         in_type = out_type
         out_type = e2nn.FieldType(self.r2_act, 16*[self.r2_act.regular_repr])
         self.conv2a = e2nn.R2Conv(in_type,  out_type, kernel_size=kernel_size, padding=kernel_size//2, stride=1, bias=False); self.relu2a = e2nn.ReLU(out_type); self.bnorm2a= e2nn.InnerBatchNorm(out_type)
@@ -227,7 +227,7 @@ class DNSteerableAGRadGalNet(nn.Module):
         conv4b = self.bnorm4b(self.relu4b(self.conv4b(conv4a))) #64->64
 
         ### Change input type back to torch tensor
-        
+
 
         ######
         # Apply correct number of attention maps / compatibility scores.
@@ -363,7 +363,7 @@ class GridAttentionBlock2D(nn.Module): #Cleaned up from _GridAttentionBlockND_TO
         input_size = x.size()
         batch_size = input_size[0]
         assert batch_size == g.size(0)
-        
+
         # Compute compatibility score: psi_f
         #print(x.size())
         theta_x = self.theta(x)
