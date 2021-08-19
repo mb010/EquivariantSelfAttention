@@ -80,7 +80,13 @@ class VanillaLeNet(nn.Module):
         super(VanillaLeNet, self).__init__()
         kernel_size = int(kernel_size)
 
+<<<<<<< HEAD
         z = imsize//2//2
+=======
+        #z = 0.5*(imsize - (2+kernel_size-5))
+        #z = int(0.5*(z - (2+kernel_size-5))) # Use these if `padding=1`
+        z = imsize//4
+>>>>>>> 5ceeb131a55cd9dc7523ee17cd9f31b27aabe7d8
 
         self.mask = utils.build_mask(imsize, margin=1)
 
