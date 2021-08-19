@@ -18,8 +18,7 @@ import configparser as ConfigParser
 
 import utils
 # Ipmport various network architectures
-from networks import AGRadGalNet, DNSteerableLeNet, DNSteerableAGRadGalNet, VanillaLeNet #e2cnn module only works in python3.7+
-from networks import
+from networks import AGRadGalNet, DNSteerableLeNet, DNSteerableAGRadGalNet, VanillaLeNet, testNet #e2cnn module only works in python3.7+
 # Import various data classes
 from datasets import FRDEEPF
 from datasets import MiraBest_full, MBFRConfident, MBFRUncertain, MBHybrid
