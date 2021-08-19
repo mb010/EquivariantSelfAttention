@@ -18,13 +18,12 @@ class testNet(nn.Module):
         super(testNet, self).__init__()
         kernel_size = int(kernel_size)
 
-        z = 0.5*(imsize - 2)
-        z = int(0.5*(z - 2))
+        z = imsize//2//2
 
         #self.mask = utils.build_mask(imsize, margin=1)
 
-        self.conv1 = nn.Conv2d(in_chan, 6, kernel_size, padding=1)
-        self.conv2 = nn.Conv2d(6, 16, kernel_size, padding=1)
+        self.conv1 = nn.Conv2d(in_chan, 6, kernel_size, padding=kernel_size//2)
+        self.conv2 = nn.Conv2d(6, 16, kernel_size, padding=kernel_size//2)
         self.fc1   = nn.Linear(16*z*z, 120)
         self.fc2   = nn.Linear(120, 84)
         self.fc3   = nn.Linear(84, out_chan)
@@ -80,13 +79,7 @@ class VanillaLeNet(nn.Module):
         super(VanillaLeNet, self).__init__()
         kernel_size = int(kernel_size)
 
-<<<<<<< HEAD
         z = imsize//2//2
-=======
-        #z = 0.5*(imsize - (2+kernel_size-5))
-        #z = int(0.5*(z - (2+kernel_size-5))) # Use these if `padding=1`
-        z = imsize//4
->>>>>>> 5ceeb131a55cd9dc7523ee17cd9f31b27aabe7d8
 
         self.mask = utils.build_mask(imsize, margin=1)
 
@@ -147,8 +140,7 @@ class CNSteerableLeNet(nn.Module):
         super(CNSteerableLeNet, self).__init__()
         kernel_size = int(kernel_size)
 
-        z = 0.5*(imsize - 2)
-        z = int(0.5*(z - 2))
+        z = imsize//2//2
 
         self.r2_act = gspaces.Rot2dOnR2(N)
 
@@ -157,13 +149,13 @@ class CNSteerableLeNet(nn.Module):
 
         out_type = e2nn.FieldType(self.r2_act, 6*[self.r2_act.regular_repr])
         self.mask = e2nn.MaskModule(in_type, imsize, margin=1)
-        self.conv1 = e2nn.R2Conv(in_type, out_type, kernel_size=kernel_size, padding=1, bias=False)
+        self.conv1 = e2nn.R2Conv(in_type, out_type, kernel_size=kernel_size, padding=kernel_size//2, bias=False)
         self.relu1 = e2nn.ReLU(out_type, inplace=True)
         self.pool1 = e2nn.PointwiseMaxPoolAntialiased(out_type, kernel_size=2)
 
         in_type = self.pool1.out_type
         out_type = e2nn.FieldType(self.r2_act, 16*[self.r2_act.regular_repr])
-        self.conv2 = e2nn.R2Conv(in_type, out_type, kernel_size=kernel_size, padding=1, bias=False)
+        self.conv2 = e2nn.R2Conv(in_type, out_type, kernel_size=kernel_size, padding=kernel_size//2, bias=False)
         self.relu2 = e2nn.ReLU(out_type, inplace=True)
         self.pool2 = e2nn.PointwiseMaxPoolAntialiased(out_type, kernel_size=2)
 
@@ -240,8 +232,7 @@ class DNSteerableLeNet(nn.Module):
         if number_rotations != None:
             N = int(number_rotations)
 
-        z = 0.5*(imsize - 2)
-        z = int(0.5*(z - 2))
+        z = imsize//2//2
 
         self.r2_act = gspaces.FlipRot2dOnR2(N)
 
@@ -250,13 +241,13 @@ class DNSteerableLeNet(nn.Module):
 
         out_type = e2nn.FieldType(self.r2_act, 6*[self.r2_act.regular_repr])
         self.mask = e2nn.MaskModule(in_type, imsize, margin=1)
-        self.conv1 = e2nn.R2Conv(in_type, out_type, kernel_size=kernel_size, padding=1, bias=False)
+        self.conv1 = e2nn.R2Conv(in_type, out_type, kernel_size=kernel_size, padding=kernel_size//2, bias=False)
         self.relu1 = e2nn.ReLU(out_type, inplace=True)
         self.pool1 = e2nn.PointwiseMaxPoolAntialiased(out_type, kernel_size=2)
 
         in_type = self.pool1.out_type
         out_type = e2nn.FieldType(self.r2_act, 16*[self.r2_act.regular_repr])
-        self.conv2 = e2nn.R2Conv(in_type, out_type, kernel_size=kernel_size, padding=1, bias=False)
+        self.conv2 = e2nn.R2Conv(in_type, out_type, kernel_size=kernel_size, padding=kernel_size//2, bias=False)
         self.relu2 = e2nn.ReLU(out_type, inplace=True)
         self.pool2 = e2nn.PointwiseMaxPoolAntialiased(out_type, kernel_size=2)
 
@@ -319,8 +310,7 @@ class DNRestrictedLeNet(nn.Module):
     def __init__(self, in_chan, out_chan, imsize, kernel_size=5, N=8):
         super(DNRestrictedLeNet, self).__init__()
 
-        z = 0.5*(imsize - 2)
-        z = int(0.5*(z - 2))
+        z = imsize//2//2
 
         self.r2_act = gspaces.FlipRot2dOnR2(N)
 
@@ -329,13 +319,13 @@ class DNRestrictedLeNet(nn.Module):
 
         out_type = e2nn.FieldType(self.r2_act, 6*[self.r2_act.regular_repr])
         self.mask = e2nn.MaskModule(in_type, imsize, margin=1)
-        self.conv1 = e2nn.R2Conv(in_type, out_type, kernel_size=kernel_size, padding=1, bias=False)
+        self.conv1 = e2nn.R2Conv(in_type, out_type, kernel_size=kernel_size, padding=kernel_size//2, bias=False)
         self.relu1 = e2nn.ReLU(out_type, inplace=True)
         self.pool1 = e2nn.PointwiseMaxPoolAntialiased(out_type, kernel_size=2)
 
         self.gpool = e2nn.GroupPooling(out_type)
 
-        self.conv2 = nn.Conv2d(6, 16, kernel_size, padding=1)
+        self.conv2 = nn.Conv2d(6, 16, kernel_size, padding=kernel_size//2)
 
         self.fc1   = nn.Linear(16*z*z, 120)
         self.fc2   = nn.Linear(120, 84)
