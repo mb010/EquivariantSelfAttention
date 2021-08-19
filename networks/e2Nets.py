@@ -80,13 +80,12 @@ class VanillaLeNet(nn.Module):
         super(VanillaLeNet, self).__init__()
         kernel_size = int(kernel_size)
 
-        z = 0.5*(imsize - 2)
-        z = int(0.5*(z - 2))
+        z = imsize//2//2
 
         self.mask = utils.build_mask(imsize, margin=1)
 
-        self.conv1 = nn.Conv2d(in_chan, 6, kernel_size, padding=1)
-        self.conv2 = nn.Conv2d(6, 16, kernel_size, padding=1)
+        self.conv1 = nn.Conv2d(in_chan, 6, kernel_size, padding=kernel_size//2)
+        self.conv2 = nn.Conv2d(6, 16, kernel_size, padding=kernel_size//2)
         self.fc1   = nn.Linear(16*z*z, 120)
         self.fc2   = nn.Linear(120, 84)
         self.fc3   = nn.Linear(84, out_chan)
