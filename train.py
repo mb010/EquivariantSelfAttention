@@ -51,7 +51,8 @@ net = locals()[config['model']['base']](**config['model']).to(device)
 
 if not quiet:
     if 'DN' not in config['model']['base']:
-        summary(net, (1, 150, 150))
+        imsize = 150 if not config.has_option('model', 'imsize') else config.getint('model', 'imsize')
+        summary(net, (1, imsize, imsize))
     print(device)
     if device == torch.device('cuda'):
         print(torch.cuda.get_device_name(device=device))
