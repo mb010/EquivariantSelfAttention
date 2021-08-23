@@ -30,4 +30,5 @@ os.makedirs(OUT_PATH, exist_ok=True)
 tmp = shutil.copy(OUT_PATH+str(best_epoch)+'.pt'
 for f in files:
     if '.pt' not in f:
-        tmp = shutil.copy(MODEL_EVAL_PATH+f, OUT_PATH)
+        if (len(f.split('_'))!=4) or ('amap' in f):
+            tmp = shutil.copy(MODEL_EVAL_PATH+f, OUT_PATH)

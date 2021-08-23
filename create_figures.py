@@ -1,4 +1,5 @@
 import os
+from tqdm import tqdm
 
 import e2cnn
 import torch
@@ -10,6 +11,9 @@ import PIL
 
 import pandas as pd
 import numpy as np
+
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import configparser as ConfigParser
 
@@ -79,7 +83,7 @@ else:
     kernel_size = 3
 
 #net = locals()[config['model']['base']](**config['model']).to(device)
-path_supliment = config['data']['augment']
+path_supliment = config['data']['augment']+'/'
 model = utils.utils.load_model(config, load_model='best', device=device, path_supliment=path_supliment)
 
 # Define interesting sources for each data set_title
@@ -89,7 +93,7 @@ interesting_sources_dict = {
     'MBFRUncertain_labels': [0,1,1],
     'MLFR_labels': [0,1,0]
 }
-test_data =
+
 ################################################################################
 ### Pixel Attention Distribution ###
 # Find or remake code for distrubtion of pixel values.
@@ -116,17 +120,17 @@ if individual_plot:
                 layer_no=3,
                 layer_name_base='attention'
         )
-        raw_predictions_ = model(test_data.data[i].reshape(1,1,150,150).to(device))
+        raw_predictions_ = model(torch.tensor(test_data.data[i].reshape(1,1,150,150)).float().to(device))
         raw_predictions = raw_predictions_.cpu().detach().numpy()
         pred = raw_predictions.argmax(axis=1)
 
-        fig, ax = plt.subplots(1, 2, figsize=(16,9), fontsize=16, set_tight_layout=True)
+        fig, ax = plt.subplots(1, 2, figsize=(16,9))
 
-        ax[0].imshow(test_data.data[i].squeeze(), cmap='greys')
+        ax[0].imshow(test_data.data[i].squeeze(), cmap='gray')
         ax[0].contour(np.where(test_data.data[i].squeeze()>0,1,0), cmap='cool')
         ax[0].set_xticks([])
         ax[0].set_yticks([])
-        ax[0].set_title(fr'Example FR{test_data[1][i]} Source')
+        ax[0].set_title(fr'Example FR{test_data.targets[i]+1} Source')
 
         ax[1].imshow(amaps[0].squeeze(), cmap='magma')
         ax[1].contour(np.where(test_data.data[i].squeeze()>0,1,0), cmap='cool')
@@ -381,10 +385,10 @@ if mp4_plot:
     imgs = []
     labels = []
     data_name = config['data']['dataset']
-    test_data = utils.data.load(config, train=False, augmentation='None', data_loader=True)    # Prepare sources and labels
+    test_data = utils.data.load(config, train=False, augmentation='None', data_loader=False)    # Prepare sources and labels
     for i in sources_of_interest:
         imgs.append(test_data.data[i].squeeze())
-        labels.append(test_data.targets[i].squeeze())
+        labels.append(test_data.targets[i])
 
     frames = 24*6
     gif_duration_s = 6
@@ -392,15 +396,15 @@ if mp4_plot:
 
     for source_no in sources_of_interest:
         image = test_data.data[source_no].squeeze()
-        label = test_data.targets[source_no].squeeze()
+        label = test_data.targets[source_no]
         for color in ['', 'RGB']:
             RGB_ = True if color=='RGB' else False
 
             print(f"MP4 image creation starting for {color}source {source_no}")
             out_path = FIG_PATH+f"{data_name}_{source_no}{color}_FR{label+1}_*.png"
             # build the frames
-            os.makedirs(root, exist_ok=True)
-            animate(model, image, out_path, draw_scalar_field, R=frames, S=150, RGB=RGB_)
+            os.makedirs(FIG_PATH, exist_ok=True)
+            animate(model, image[np.newaxis,:,:], out_path, draw_scalar_field, R=frames, S=150, RGB=RGB_)
 
             # produce final video using ffmpeg command:
             #ffmpeg -framerate 24 -i animation_frames/amap_MingoLotSS16_FR2_%03d.png -pix_fmt yuv420p FILE_NAME.mp4
@@ -429,7 +433,7 @@ if distribution_plots:
         path_supliment+='/'
 
     # Load in data
-    test_data_loader = utils.data.load(cfg, train=False, augmentation='random rotation', data_loader=True)    # Prepare sources and labels
+    test_data_loader = utils.data.load(config, train=False, augmentation='random rotation', data_loader=True)    # Prepare sources and labels
     for idx, r in tqdm(enumerate(range(repititions))):
         for idy, (test_data, l) in enumerate(test_data_loader):
             # Produce Attention Maps

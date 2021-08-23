@@ -28,6 +28,7 @@ args        = utils.parse_args()
 config_name = args['config']
 config      = ConfigParser.ConfigParser(allow_no_value=True)
 config.read(f"configs/{config_name}")
+data_config = ConfigParser.ConfigParser(allow_no_value=True)
 
 # Set seeds for reproduceability
 torch.manual_seed(42)
@@ -43,8 +44,7 @@ data_configs = [
 
 # Evaluation augmentations to iterate over
 augmentations = [
-    "rotation and flipping",
-    #"random rotation",
+    "random rotation",
     #"restricted random rotation"
 ]
 
@@ -67,8 +67,8 @@ for d_cfg in data_configs:
     for augmentation in augmentations:
         path_supliment = config['data']['augment']+'/'
         model = utils.utils.load_model(config, load_model='best', device=device, path_supliment=path_supliment)
+        data_config = ConfigParser.ConfigParser(allow_no_value=True)
         data_config.read('configs/'+d_cfg)
-        print(f"Evaluating {cfg}: {config['output']['directory']}/{config['data']['augment']}\t{data_config['data']['dataset']}\t{augmentation}")
         data  = utils.data.load(
             data_config,
             train=False,

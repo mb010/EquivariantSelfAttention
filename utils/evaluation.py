@@ -211,7 +211,7 @@ def training_plot(
     ax.legend()
 
     if save:
-        plt.figsave(save, transparent=True)
+        plt.savefig(save, transparent=True)
     else:
         fig.show()
 
