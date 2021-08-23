@@ -421,7 +421,7 @@ if mp4_plot:
 # Add plot_confusion_matrix to call (distributions)
 if distribution_plots:
 
-    repititions = 72
+    repititions = 180
     test_data = utils.data.load(config, train=False, augmentation='None', data_loader=True)    # Prepare sources and labels
     data_name = config['data']['dataset']
 

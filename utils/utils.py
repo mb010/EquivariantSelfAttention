@@ -122,7 +122,7 @@ def plot_3(
     im_b = ax_dict['b'].imshow(factors[1]*b, cmap=cmaps[1], vmin=-lim(vmin[1])(b), vmax=lim(vmax[1])(b), origin='lower')
     im_c = ax_dict['c'].imshow(factors[2]*c, cmap=cmaps[2], vmin=-lim(vmin[2])(c), vmax=lim(vmax[2])(c), origin='lower')
     if plt_contour:
-        im_contour = ax_dict['c'].contour(contour, 0, levels=[0.01])
+        im_contour = ax_dict['c'].contour(contour, 0, levels=[np.std(contour)/2], alpha=0.7, colors='k')
 
     ax_dict['a'].set_xticks([]); ax_dict['a'].set_yticks([])
     ax_dict['b'].set_xticks([]); ax_dict['b'].set_yticks([])
