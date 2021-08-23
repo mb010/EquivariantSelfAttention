@@ -17,12 +17,14 @@ class AGRadGalNet(nn.Module):
                  n_classes=2,
                  attention_normalisation='sigmoid',
                  quiet=True,
-                 kernel_size=3
+                 kernel_size=3,
+                 imsize=150
                 ):
         super(AGRadGalNet, self).__init__()
         aggregation_mode = attention_aggregation
         normalisation = attention_normalisation
         kernel_size = int(kernel_size)
+        imsize = int(imsize)
         AG = int(attention_gates)
         assert aggregation_mode in ['concat', 'mean', 'deep_sup', 'ft'], 'Aggregation mode not recognised. Valid inputs include concat, mean, deep_sup or ft.'
         assert normalisation in ['sigmoid','range_norm','std_mean_norm','tanh','softmax'], f'Nomralisation not implemented. Can be any of: sigmoid, range_norm, std_mean_norm, tanh, softmax'
@@ -58,11 +60,11 @@ class AGRadGalNet(nn.Module):
         if self.ag == 0:
             pass
         if self.ag >= 1:
-            self.attention1 = GridAttentionBlock2D(in_channels=32, gating_channels=64, inter_channels=64, input_size=[150//4,150//4], normalisation=normalisation)
+            self.attention1 = GridAttentionBlock2D(in_channels=32, gating_channels=64, inter_channels=64, input_size=[imsize//4,imsize//4], normalisation=normalisation)
         if self.ag >= 2:
-            self.attention2 = GridAttentionBlock2D(in_channels=16, gating_channels=64, inter_channels=64, input_size=[150//2,150//2], normalisation=normalisation)
+            self.attention2 = GridAttentionBlock2D(in_channels=16, gating_channels=64, inter_channels=64, input_size=[imsize//2,imsize//2], normalisation=normalisation)
         if self.ag >= 3:
-            self.attention3 = GridAttentionBlock2D(in_channels=6, gating_channels=64, inter_channels=64, input_size=[150,150], normalisation=normalisation)
+            self.attention3 = GridAttentionBlock2D(in_channels=6, gating_channels=64, inter_channels=64, input_size=[imsize,imsize], normalisation=normalisation)
 
         self.fc1 = nn.Linear(16*5*5,256) #channel_size * width * height
         self.fc2 = nn.Linear(256,256)
@@ -116,7 +118,7 @@ class AGRadGalNet(nn.Module):
                 else:
                     raise NotImplementedError
         else:
-            self.classifier = nn.Linear((150//16)**2*64, n_classes)
+            self.classifier = nn.Linear((imsize//16)**2*64, n_classes)
             self.aggregate = lambda x: self.classifier(self.flatten(x))
 
 
