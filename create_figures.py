@@ -469,12 +469,24 @@ if distribution_plots:
 
     predictions = raw_predictions.argmax(axis=1)
 
-    print(raw_predictions.shape)
-    print(labels.shape)
-    print(sources.shape)
-    print(amap.shape)
-    print(predictions.shape)
+    fri_sources = sources[labels==0]
+    frii_sources= sources[labels==1]
+    fri_amap = amap[labels==0]
+    frii_amap= amap[labels==1]
 
+    def sums_and_diff(a,b, mean=False):
+        a_sum = a.sum(0)
+        b_sum = b.sum(0)
+        if mean:
+            a_sum /= a.shape[0]
+            b_sum /= b.shape[0]
+        diff = a_sum-b_sum
+        return a_sum, b_sum, diff
+
+    mask = utils.utils.build_mask(150).numpy().squeeze()
+    fri_source_sum, frii_source_sum, fr_source_diff = sums_and_diff(fri_sources, frii_sources, mean=True)
+    fri_source_sum, frii_source_sum, fr_source_diff = sums_and_diff(fri_sources, frii_sources, mean=True)
+    fri_amap_sum, frii_amap_sum, fr_amap_diff = sums_and_diff(fri_amap, frii_amap, mean=True)
 
     # Attention Map Differences
     utils.utils.plot_3(
