@@ -17,28 +17,15 @@ echo ">>> start"
 # We can pass the index using the variable: `$SLURM_ARRAY_TASK_ID`
 
 echo ">>> training for fisher experiment"
-CFGS=(
-  # Model Testing
-  '5kernel_bowles2021_mirabest_RandAug.cfg'
-  '5kernel_scaife2021_mirabest_RandAug.cfg'
-  '5kernel_D16_scaife2021_mirabest_RandAug.cfg'
-  '5kernel_C4_attention_mirabest_RandAug.cfg'
-  '5kernel_C8_attention_mirabest_RandAug.cfg'
-  '5kernel_C16_attention_mirabest_RandAug.cfg'
-  '5kernel_D4_attention_mirabest_RandAug.cfg'
-  '5kernel_D8_attention_mirabest_RandAug.cfg'
-  '5kernel_D16_attention_mirabest_RandAug.cfg'
-  # Kernel Testing
-  #'5kernel_bowles2021_mirabest-RandAug.cfg' # Already trained in 'Model Testing'
-  #'5kernel_scaife2021_mirabest_RandAug.cfg' # Already trained in 'Model Testing'
-  #'5kernel_D8_attention_mirabest-RandAug.cfg' # Already trained in 'Model Testing'
-  '7kernel_bowles2021_mirabest_RandAug.cfg'
-  '7kernel_scaife2021_mirabest_RandAug.cfg'
-  '7kernel_D8_attention_mirabest_RandAug.cfg'
-  '9kernel_bowles2021_mirabest_RandAug.cfg'
-  '9kernel_scaife2021_mirabest_RandAug.cfg'
-  '9kernel_D8_attention_mirabest_RandAug.cfg'
-)
+echo ">>> training for fisher experiment"
+# Manual array creation
+CFGS=()
+while IFS= read -r line; do
+  [[ "$line" =~ ^#.*$ ]] && continue
+  arr+=("$line")
+  echo "$line"
+done < configs/experiment_configs.txt
+
 CFG=${CFGS[$SLURM_ARRAY_TASK_ID]}
 
 echo 'Training:' $CFG

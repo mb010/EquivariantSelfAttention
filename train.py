@@ -109,7 +109,8 @@ model, conf_mat, validation_min = utils.train(
     loss_function=nn.CrossEntropyLoss(),
     output_model=True,
     early_stopping=True,
-    output_best_validation=True
+    output_best_validation=True,
+    overwrite=False
 )
 print(f"""Confusion Matrix: {conf_mat}
 Learning Rate: {lr}
