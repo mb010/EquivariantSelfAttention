@@ -46,73 +46,79 @@ root = config['data']['directory']
 os.makedirs(root, exist_ok=True)
 
 # -----------------------------------------------------------------------------
+# Check that model needs to be trained
+if os.path.ispath(f"{config['output']['directory']+'/'+config['data']['augment']}/{config['output']['training_evaluation']}"):
+    print(f">>> Model already trained in {folder_name}. Delete {output_evaluation_path} to force training to this directory.")
+
+# -----------------------------------------------------------------------------
 # Load network architecture (with random seeded weights)
-print(f"Loading in {config['model']['base']}")
-net = locals()[config['model']['base']](**config['model']).to(device)
+else:
+    print(f"Loading in {config['model']['base']}")
+    net = locals()[config['model']['base']](**config['model']).to(device)
 
-if not quiet:
-    if 'DN' not in config['model']['base']:
-        imsize = 150 if not config.has_option('model', 'imsize') else config.getint('model', 'imsize')
-        summary(net, (1, imsize, imsize))
-    print(device)
-    if device == torch.device('cuda'):
-        print(torch.cuda.get_device_name(device=device))
+    if not quiet:
+        if 'DN' not in config['model']['base']:
+            imsize = 150 if not config.has_option('model', 'imsize') else config.getint('model', 'imsize')
+            summary(net, (1, imsize, imsize))
+        print(device)
+        if device == torch.device('cuda'):
+            print(torch.cuda.get_device_name(device=device))
 
-train_loader, valid_loader  = utils.data.load(
-    config,
-    train=True,
-    augmentation='config',
-    data_loader=True
-)
+    train_loader, valid_loader  = utils.data.load(
+        config,
+        train=True,
+        augmentation='config',
+        data_loader=True
+    )
 
-# -----------------------------------------------------------------------------
-# Cross Validation Parameters
-def fetch_grid_search_param(name, config=config):
-    raw_ = config['grid_search'][name]
-    raw_list = raw_.split(',')
-    do = bool(raw_list.pop(0))
-    out = np.asarray(raw_list, dtype=np.float64)
-    return do, out
+    # -----------------------------------------------------------------------------
+    # Cross Validation Parameters
+    def fetch_grid_search_param(name, config=config):
+        raw_ = config['grid_search'][name]
+        raw_list = raw_.split(',')
+        do = bool(raw_list.pop(0))
+        out = np.asarray(raw_list, dtype=np.float64)
+        return do, out
 
-# -----------------------------------------------------------------------------
-# Extract learning values
-learning_rate = config.getfloat('training', 'learning_rate')
-do, lr_scaling = fetch_grid_search_param(name='learning_rate', config=config)
-learning_rate *= lr_scaling
-#print(learning_rate)
+    # -----------------------------------------------------------------------------
+    # Extract learning values
+    learning_rate = config.getfloat('training', 'learning_rate')
+    do, lr_scaling = fetch_grid_search_param(name='learning_rate', config=config)
+    learning_rate *= lr_scaling
+    #print(learning_rate)
 
-optim_name = config['training']['optimizer']
+    optim_name = config['training']['optimizer']
 
-# -----------------------------------------------------------------------------
-# Train
-weight_decay = config.getfloat('training', 'weight_decay')
-root_out_directory_addition = '/'+config['data']['augment']
-lr = config.getfloat('final_parameters', 'learning_rate')
-optimizers = {
-    'SGD': optim.SGD(net.parameters(), lr=lr, momentum=0.9),
-    'Adagrad': optim.Adagrad(net.parameters(), lr=lr),
-    'Adadelta': optim.Adadelta(net.parameters(), lr=lr),
-    'Adam': optim.Adam(net.parameters(), lr=lr, weight_decay=weight_decay)
-    }
-optimizer  = optimizers[optim_name]
-model, conf_mat, validation_min = utils.train(
-    net,
-    device,
-    config,
-    train_loader,
-    valid_loader,
-    optimizer=optimizer,
-    root_out_directory_addition=root_out_directory_addition,
-    scheduler = None,
-    save_validation_updates=True,
-    class_splitting_index=1,
-    loss_function=nn.CrossEntropyLoss(),
-    output_model=True,
-    early_stopping=True,
-    output_best_validation=True,
-    overwrite=False
-)
-print(f"""Confusion Matrix: {conf_mat}
-Learning Rate: {lr}
-Minimal Validation Loss: {validation_min}
-""")
+    # -----------------------------------------------------------------------------
+    # Train
+    weight_decay = config.getfloat('training', 'weight_decay')
+    root_out_directory_addition = '/'+config['data']['augment']
+    lr = config.getfloat('final_parameters', 'learning_rate')
+    optimizers = {
+        'SGD': optim.SGD(net.parameters(), lr=lr, momentum=0.9),
+        'Adagrad': optim.Adagrad(net.parameters(), lr=lr),
+        'Adadelta': optim.Adadelta(net.parameters(), lr=lr),
+        'Adam': optim.Adam(net.parameters(), lr=lr, weight_decay=weight_decay)
+        }
+    optimizer  = optimizers[optim_name]
+    model, conf_mat, validation_min = utils.train(
+        net,
+        device,
+        config,
+        train_loader,
+        valid_loader,
+        optimizer=optimizer,
+        root_out_directory_addition=root_out_directory_addition,
+        scheduler = None,
+        save_validation_updates=True,
+        class_splitting_index=1,
+        loss_function=nn.CrossEntropyLoss(),
+        output_model=True,
+        early_stopping=True,
+        output_best_validation=True,
+        overwrite=False
+    )
+    print(f"""Confusion Matrix: {conf_mat}
+    Learning Rate: {lr}
+    Minimal Validation Loss: {validation_min}
+    """)

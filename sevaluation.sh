@@ -16,7 +16,7 @@ echo ">>> start"
 # array indexes 0-14 and use at most 15 nodes at once.
 # We can pass the index using the variable: `$SLURM_ARRAY_TASK_ID`
 
-echo ">>> training for fisher experiment"
+echo ">>> Evaluation"
 # Manual array creation
 CFGS=()
 while IFS= read -r line; do
