@@ -23,6 +23,7 @@ from networks import AGRadGalNet, DNSteerableLeNet, DNSteerableAGRadGalNet, Vani
 from datasets import FRDEEPF
 from datasets import MiraBest_full, MBFRConfident, MBFRUncertain, MBHybrid
 from datasets import MingoLoTSS, MLFR, MLFRTest
+from torchvision.datasets import MNIST
 
 
 def parse_args():

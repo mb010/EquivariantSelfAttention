@@ -21,9 +21,10 @@ from networks import AGRadGalNet, DNSteerableLeNet, DNSteerableAGRadGalNet #e2cn
 from datasets import FRDEEPF
 from datasets import MiraBest_full, MBFRConfident, MBFRUncertain, MBHybrid
 from datasets import MingoLoTSS, MLFR, MLFRTest
+from torchvision.datasets import MNIST
 
-def train(net, 
-          device, 
+def train(net,
+          device,
           config,
           train_loader,
           valid_loader,
@@ -38,18 +39,18 @@ def train(net,
           output_best_validation=False,
           stop_after_epochs_without_update=2000
          ):
-    """Trains a network with a given config file on 
+    """Trains a network with a given config file on
     the training and validation sets as provided.
     """
     # -----------------------------------------------------------------------------
     # Initialise Seeds
     torch.manual_seed(42)
     np.random.seed(42)
-    
+
     # Read in values
     quiet          = config.getboolean('DEFAULT', 'quiet')
     early_stopping = config.getboolean('training', 'early_stopping')
-    
+
     # Initialise training / validation saving objects
     training_results = {
         'train_loss': 0,
@@ -69,7 +70,7 @@ def train(net,
     os.makedirs(folder_name, exist_ok=True)
     print(f"Folder to be saved to: {folder_name}")
     print(f"Is PATH: {os.path.isdir(folder_name)}")
-    
+
     # Initialise data frame and CSV file
     df = pd.DataFrame(columns = list(training_results.keys()))
     df.to_csv(f'{folder_name}/{output_evaluation_path}', index=False)
@@ -81,13 +82,13 @@ def train(net,
     # Potentially optimise early stopping augment validation set size?
     #if config['data']['augment'] == "random rotation" & "DN" in config['model']['base']:
     #    augmentation_loops = 10*augmentaion_loops
-    
+
     # -----------------------------------------------------------------------------
     # Training Loop
     validation_loss_min = np.Inf
     Epoch = config.getint('training', 'epochs')
     for epoch_count in range(Epoch):
-    
+
         # Model Training
         train_loss = 0.
         validation_loss = 0.
@@ -108,7 +109,7 @@ def train(net,
                 binary_labels = np.zeros(labels.size(), dtype=int)
                 binary_labels = np.where(labels.cpu().numpy()<class_splitting_index, binary_labels, binary_labels+1)
                 binary_labels = torch.from_numpy(binary_labels).to(device)
-                
+
                 # Loss & backpropagation
                 pred = net.forward(data)
                 optimizer.zero_grad()
@@ -152,7 +153,7 @@ def train(net,
         training_results['FN'] = confussion_matrix[1,0]
         training_results['TN'] = confussion_matrix[1,1]
 
-        if not quiet: 
+        if not quiet:
             print(f"Epoch:{epoch_count:3}\tTraining Loss: {training_results['train_loss']:8.6f}"
                   f"\t\tValidation Loss: {training_results['validation_loss']:8.6f}")
 
@@ -172,25 +173,25 @@ def train(net,
 
         # Save current losses / evaluations to the data frame
         df = df.append(training_results, ignore_index=True)
-        
+
         if training_results['validation_update']:
             epochs_without_update=0
             # Appending data fram to csv
             df.to_csv(f"{folder_name}/{output_evaluation_path}", mode='a', index=False, header=False)
             df = pd.DataFrame(columns = list(training_results.keys()))
-        
+
         # Implement break if no update has been found for given number of epochs (default 1000)
         epochs_without_update += 1
         if epochs_without_update >= stop_after_epochs_without_update:
             break
-    
+
     # -----------------------------------------------------------------------------
     df.to_csv(f"{folder_name}/{output_evaluation_path}", mode='a', index=False, header=False)
     print(f"\nFinished training.\nMinimum Validation Loss: {validation_loss_min:8.6}\n")
-    
+
     # Save final model
     torch.save(net.state_dict(), f'{folder_name}/last.pt')
-    
+
     output = []
     if output_model:
         output.append(net)
@@ -201,4 +202,3 @@ def train(net,
         if early_stopping:
             print(f"best_confussion_matrix:\n{best_confussion_matrix}")
     return output
-

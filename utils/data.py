@@ -34,14 +34,14 @@ def load(config, train=False, augmentation='config', angle=0, data_loader=False)
     train: bool
         Train (True) or test set (False) set.
     augmentation: str
-        Selection of augmentation style. 'None', 'random rotation', 
+        Selection of augmentation style. 'None', 'random rotation',
         or other for augmentation according to config file.
     angle: float
         Specific angle for augmentation='rotation only'
     data_loader: bool
-        Output dataloader or not 
+        Output dataloader or not
         (outputs tuple of train & validation data loaders if train=True)
-    
+
     Outputs:
     Augmented pytorch data
     or
@@ -87,7 +87,7 @@ def load(config, train=False, augmentation='config', angle=0, data_loader=False)
             RotationTransform(angles, interpolation=PIL.Image.BILINEAR),
             transforms.RandomAffine(
                 degrees=0, # No uncontrolled rotation
-                scale=(1-scaling_factor, 1+scaling_factor), 
+                scale=(1-scaling_factor, 1+scaling_factor),
                 resample=PIL.Image.BILINEAR),
             transforms.ToTensor(),
             transforms.Normalize([datamean],[datastd])
@@ -97,7 +97,7 @@ def load(config, train=False, augmentation='config', angle=0, data_loader=False)
             transforms.RandomVerticalFlip(p=p_flip),
             transforms.RandomAffine(
                 degrees=0, # No uncontrolled rotation
-                scale=(1-scaling_factor, 1+scaling_factor), 
+                scale=(1-scaling_factor, 1+scaling_factor),
                 resample=PIL.Image.BILINEAR),
             transforms.ToTensor(),
             transforms.Normalize([datamean],[datastd])
@@ -123,7 +123,7 @@ def load(config, train=False, augmentation='config', angle=0, data_loader=False)
             transforms.Normalize([datamean],[datastd])
         ])
     }
-    
+
     download = True
     data_class = globals()[config['data']['dataset']]
     if augmentation in ['None', 'random rotation', 'restricted random rotation']:

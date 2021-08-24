@@ -21,6 +21,7 @@ from networks import AGRadGalNet, VanillaLeNet, testNet, DNSteerableLeNet, DNSte
 from datasets import FRDEEPF
 from datasets import MiraBest_full, MBFRConfident, MBFRUncertain, MBHybrid
 from datasets import MingoLoTSS, MLFR, MLFRTest
+from torchvision.datasets import MNIST
 
 
 # -----------------------------------------------------------------------------
@@ -58,9 +59,9 @@ if not quiet:
         print(torch.cuda.get_device_name(device=device))
 
 train_loader, valid_loader  = utils.data.load(
-    config, 
-    train=True, 
-    augmentation='config', 
+    config,
+    train=True,
+    augmentation='config',
     data_loader=True
 )
 
@@ -108,7 +109,7 @@ model, conf_mat, validation_min = utils.train(
     loss_function=nn.CrossEntropyLoss(),
     output_model=True,
     early_stopping=True,
-    output_best_validation=True        
+    output_best_validation=True
 )
 print(f"""Confusion Matrix: {conf_mat}
 Learning Rate: {lr}

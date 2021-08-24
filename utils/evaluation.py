@@ -21,6 +21,7 @@ from networks import AGRadGalNet, DNSteerableLeNet, DNSteerableAGRadGalNet #e2cn
 from datasets import FRDEEPF
 from datasets import MiraBest_full, MBFRConfident, MBFRUncertain, MBHybrid
 from datasets import MingoLoTSS, MLFR, MLFRTest
+from torchvision.datasets import MNIST
 
 # sklearn
 from sklearn.metrics import classification_report, roc_curve, auc
