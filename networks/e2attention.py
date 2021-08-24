@@ -97,6 +97,7 @@ class DNSteerableAGRadGalNet(nn.Module):
         self.fc1 = nn.Linear(16*5*5,256) #channel_size * width * height
         self.fc2 = nn.Linear(256,256)
         self.fc3 = nn.Linear(256, n_classes)
+        self.dummy = nn.Parameter(torch.empty(0))
 
         self.module_order = ['conv1a', 'relu1a', 'bnorm1a', #1->6
                              'conv1b', 'relu1b', 'bnorm1b', #6->6
@@ -206,7 +207,8 @@ class DNSteerableAGRadGalNet(nn.Module):
         # Change input type to e2cnn group type
         inputs_ = e2nn.GeometricTensor(inputs, self.in_type)
         # Mask inputs using self.mask
-        inputs = self.mask(inputs_)
+        device = self.dummy.device
+        inputs = self.mask(inputs_).to(device=device)
         # Convolutional blocks
         conv1a = self.bnorm1a(self.relu1a(self.conv1a(inputs))) #1->6
         conv1b = self.bnorm1b(self.relu1b(self.conv1b(conv1a))) #6->6

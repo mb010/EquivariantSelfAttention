@@ -115,7 +115,7 @@ class VanillaLeNet(nn.Module):
 
         # check device for model:
         device = self.dummy.device
-        mask = self.mask.to(device=device)
+        mask = self.mask.to(device=device) ### WHATS HAPPENING ???
 
         x = x*mask
 
