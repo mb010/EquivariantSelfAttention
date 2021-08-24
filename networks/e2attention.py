@@ -89,11 +89,11 @@ class DNSteerableAGRadGalNet(nn.Module):
         if self.ag == 0:
             pass
         if self.ag >= 1:
-            self.attention1 = GridAttentionBlock2D(in_channels=32, gating_channels=64, inter_channels=64, input_size=[150//4,150//4], normalisation=normalisation)
+            self.attention1 = GridAttentionBlock2D(in_channels=32, gating_channels=64, inter_channels=64, input_size=[imsize//4,imsize//4], normalisation=normalisation)
         if self.ag >= 2:
-            self.attention2 = GridAttentionBlock2D(in_channels=16, gating_channels=64, inter_channels=64, input_size=[150//2,150//2], normalisation=normalisation)
+            self.attention2 = GridAttentionBlock2D(in_channels=16, gating_channels=64, inter_channels=64, input_size=[imsize//2,imsize//2], normalisation=normalisation)
         if self.ag >= 3:
-            self.attention3 = GridAttentionBlock2D(in_channels=6, gating_channels=64, inter_channels=64, input_size=[150,150], normalisation=normalisation)
+            self.attention3 = GridAttentionBlock2D(in_channels=6, gating_channels=64, inter_channels=64, input_size=[imsize,imsize], normalisation=normalisation)
 
         self.fc1 = nn.Linear(16*5*5,256) #channel_size * width * height
         self.fc2 = nn.Linear(256,256)
