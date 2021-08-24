@@ -8,7 +8,7 @@
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=17
 #SBATCH --no-reque
-#SBATCH --array=0-14%15
+#SBATCH --array=0-23%24
 
 echo ">>> start"
 ### ARRAY JOBS ###
@@ -22,8 +22,7 @@ echo ">>> training for fisher experiment"
 CFGS=()
 while IFS= read -r line; do
   [[ "$line" =~ ^#.*$ ]] && continue
-  arr+=("$line")
-  echo "$line"
+  CFGS+=("$line")
 done < configs/experiment_configs.txt
 
 CFG=${CFGS[$SLURM_ARRAY_TASK_ID]}
