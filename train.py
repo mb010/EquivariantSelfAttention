@@ -47,8 +47,8 @@ os.makedirs(root, exist_ok=True)
 
 # -----------------------------------------------------------------------------
 # Check that model needs to be trained
-if os.path.ispath(f"{config['output']['directory']+'/'+config['data']['augment']}/{config['output']['training_evaluation']}"):
-    print(f">>> Model already trained in {folder_name}. Delete {output_evaluation_path} to force training to this directory.")
+if os.path.isfile(f"{config['output']['directory']+'/'+config['data']['augment']}/{config['output']['training_evaluation']}"):
+    print(f">>> Model already trained in {config['output']['directory']+'/'+config['data']['augment']}. Delete {config['output']['training_evaluation']} to force training to this directory.")
 
 # -----------------------------------------------------------------------------
 # Load network architecture (with random seeded weights)
@@ -115,8 +115,7 @@ else:
         loss_function=nn.CrossEntropyLoss(),
         output_model=True,
         early_stopping=True,
-        output_best_validation=True,
-        overwrite=False
+        output_best_validation=True
     )
     print(f"""Confusion Matrix: {conf_mat}
     Learning Rate: {lr}
