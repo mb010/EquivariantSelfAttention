@@ -1,4 +1,5 @@
 import os
+import subprocess
 from tqdm import tqdm
 
 import e2cnn
@@ -402,7 +403,7 @@ if mp4_plot:
             RGB_ = True if color=='RGB' else False
 
             print(f"MP4 image creation starting for {color}source {source_no}")
-            out_path = FIG_PATH+f"{data_name}_{source_no}{color}_FR{label+1}_*.png"
+            out_path = FIG_PATH+f"tmp_{data_name}_{source_no}{color}_FR{label+1}_*.png"
             # build the frames
             os.makedirs(FIG_PATH, exist_ok=True)
             animate(model, image[np.newaxis,:,:], out_path, draw_scalar_field, R=frames, S=150, RGB=RGB_)
@@ -414,6 +415,19 @@ if mp4_plot:
             #img, *imgs = [Image.open(f) for f in sorted(glob.glob(out_path))]
             #img.save(fp=fp_out, format='GIF', append_images=imgs,
             #         save_all=True, duration=duration, loop=0)
+
+            out_path_ = out_path.replace('*','%03d')
+            bashCommand = f"ffmpeg -framerate 24 -i {out_path_} -pix_fmt yuv420p {out_path[:-8].replace('tmp_','')}.mp4"
+            process = subprocess.Popen(bashCommand.split(), stdout=subprocess.PIPE)
+            output, error = process.communicate()
+            print(f">>> OUTPUT FROM ffmpeg:\n{output}\n\n >>> ERROR FROM ffmpeg:\n{error}")
+
+            out_path = out_path.replace('*','%03d')
+            bashCommand = f"rm {out_path}"
+            process = subprocess.Popen(bashCommand.split(), stdout=subprocess.PIPE)
+            output, error = process.communicate()
+            print(f">>> OUTPUT FROM rm MP4 FRAMES:\n{output}\n\n >>> ERROR FROM rm MP4 FRAMES:\n{error}")
+
 
 
 ################################################################################
