@@ -56,7 +56,7 @@ def load(config, train=False, augmentation='config', angle=0, data_loader=False)
     datamean = config.getfloat('data', 'datamean')
     datastd = config.getfloat('data', 'datastd')
     number_rotations = config.getint('data', 'number_rotations')
-    imsize = config.getint('data', 'imsize')
+    imsize = 150 if not config.has_option('model', 'imsize') else config.getint('model', 'imsize')
     scaling_factor = config.getfloat('data', 'scaling')
     angles = np.linspace(0, 359, config.getint('data', 'number_rotations'))
     p_flip = 0.5 if config.getboolean('data','flip') else 0
