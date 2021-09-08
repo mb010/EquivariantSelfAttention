@@ -64,6 +64,8 @@ else:
 
 net = locals()[config['model']['base']](**config['model']).to(device)
 
+if config['data']['dataset'] == 'MNIST':
+    data_configs = [config_name]
 for d_cfg in data_configs:
     for augmentation in augmentations:
         path_supliment = config['data']['augment']+'/'

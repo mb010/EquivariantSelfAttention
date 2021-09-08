@@ -8,6 +8,7 @@ data/mirabest
 data/frdeep
 data/mingo
 data/MNIST
+data/mirabestConfident/
 models/bowles2021
 models/scaife2021
 models/tang2019

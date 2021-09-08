@@ -8,7 +8,7 @@
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=17
 #SBATCH --no-reque
-#SBATCH --array=0-23%124
+#SBATCH --array=0-23%24
 
 echo ">>> start"
 ### ARRAY JOBS ###

@@ -91,9 +91,13 @@ model = utils.utils.load_model(config, load_model='best', device=device, path_su
 # Define interesting sources for each data set_title
 interesting_sources_dict = {
     'MBFRUncertain': [3,32,30],
-    'MLFR': [8,16,30],
     'MBFRUncertain_labels': [0,1,1],
-    'MLFR_labels': [0,1,0]
+    'MBFRConfident': [3,32,30],
+    'MBFRConfident_labels': [0,1,1],
+    'MLFR': [8,16,30],
+    'MLFR_labels': [0,1,0],
+    'MNIST': [0,30,50],
+    'MNIST_labels': [0,0,0]
 }
 
 ################################################################################
@@ -417,13 +421,13 @@ if mp4_plot:
             #         save_all=True, duration=duration, loop=0)
 
             out_path_ = out_path.replace('*','%03d')
-            bashCommand = f"ffmpeg -framerate 24 -i {out_path_} -pix_fmt yuv420p {out_path[:-8].replace('tmp_','')}.mp4"
+            bashCommand = f"/share/apps/ffmpeg/bin/ffmpeg -framerate 24 -i {out_path_} -pix_fmt yuv420p {out_path[:-8].replace('tmp_','')}.mp4"
             process = subprocess.Popen(bashCommand.split(), stdout=subprocess.PIPE)
             output, error = process.communicate()
             print(f">>> OUTPUT FROM ffmpeg:\n{output}\n\n >>> ERROR FROM ffmpeg:\n{error}")
 
             out_path = out_path.replace('*','%03d')
-            bashCommand = f"rm {out_path}"
+            bashCommand = f"rm '{out_path}'"
             process = subprocess.Popen(bashCommand.split(), stdout=subprocess.PIPE)
             output, error = process.communicate()
             print(f">>> OUTPUT FROM rm MP4 FRAMES:\n{output}\n\n >>> ERROR FROM rm MP4 FRAMES:\n{error}")
