@@ -114,19 +114,20 @@ interesting_sources_dict = {
 # Plot individually
 if individual_plot:
     data_name = config['data']['dataset']
+    imsize = 150 if data_name != 'MNIST' else 28
     sources_of_interest = interesting_sources_dict[data_name]
 
     test_data = utils.data.load(config, train=False, augmentation='None', data_loader=False)    # Prepare sources and labels
     for i in sources_of_interest:
         amaps, amap_originals = utils.attention.attentions_func(
-                test_data.data[i].reshape(1,1,150,150),
+                test_data.data[i].reshape(1,1,imsize,imsize),
                 model,
                 mean=True,
                 device=device,
                 layer_no=3,
                 layer_name_base='attention'
         )
-        raw_predictions_ = model(torch.tensor(test_data.data[i].reshape(1,1,150,150)).float().to(device))
+        raw_predictions_ = model(torch.tensor(test_data.data[i].reshape(1,1,imsize,imsize)).float().to(device))
         raw_predictions = raw_predictions_.cpu().detach().numpy()
         pred = raw_predictions.argmax(axis=1)
 
@@ -136,13 +137,14 @@ if individual_plot:
         ax[0].contour(np.where(test_data.data[i].squeeze()>0,1,0), cmap='cool')
         ax[0].set_xticks([])
         ax[0].set_yticks([])
-        ax[0].set_title(fr'Example FR{test_data.targets[i]+1} Source')
+        ax[0].set_title(fr'Example (Target={test_data.targets[i]})')
 
         ax[1].imshow(amaps[0].squeeze(), cmap='magma')
         ax[1].contour(np.where(test_data.data[i].squeeze()>0,1,0), cmap='cool')
         ax[1].set_xticks([])
         ax[1].set_yticks([])
-        ax[1].set_title(fr'Mean Attention Map (Pred: FR{pred[0]+1})')
+        title = fr'Mean Attention Map '
+        ax[1].set_title(fr'Mean Attention Map (Pred={pred[0]})')
 
         plt.savefig(
             FIG_PATH+f'{data_name}_source_{i}.png',
@@ -410,7 +412,7 @@ if mp4_plot:
             out_path = FIG_PATH+f"tmp_{data_name}_{source_no}{color}_FR{label+1}_*.png"
             # build the frames
             os.makedirs(FIG_PATH, exist_ok=True)
-            animate(model, image[np.newaxis,:,:], out_path, draw_scalar_field, R=frames, S=150, RGB=RGB_)
+            animate(model, image[np.newaxis,:,:], out_path, draw_scalar_field, R=frames, S=imsize, RGB=RGB_)
 
             # produce final video using ffmpeg command:
             #ffmpeg -framerate 24 -i animation_frames/amap_MingoLotSS16_FR2_%03d.png -pix_fmt yuv420p FILE_NAME.mp4
@@ -502,7 +504,7 @@ if distribution_plots:
         diff = a_sum-b_sum
         return a_sum, b_sum, diff
 
-    mask = utils.utils.build_mask(150).numpy().squeeze()
+    mask = utils.utils.build_mask(imsize).numpy().squeeze()
     fri_source_sum, frii_source_sum, fr_source_diff = sums_and_diff(fri_sources, frii_sources, mean=True)
     fri_source_sum, frii_source_sum, fr_source_diff = sums_and_diff(fri_sources, frii_sources, mean=True)
     fri_amap_sum, frii_amap_sum, fr_amap_diff = sums_and_diff(fri_amap, frii_amap, mean=True)
