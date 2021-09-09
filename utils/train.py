@@ -32,12 +32,11 @@ def train(net,
           root_out_directory_addition='',
           scheduler = None,
           save_validation_updates=True,
-          class_splitting_index=1,
           loss_function = nn.CrossEntropyLoss(),
           output_model=True,
           early_stopping=True,
           output_best_validation=False,
-          stop_after_epochs_without_update=2000
+          stop_after_epochs_without_update=200
          ):
     """Trains a network with a given config file on
     the training and validation sets as provided.
@@ -55,10 +54,7 @@ def train(net,
     training_results = {
         'train_loss': 0,
         'validation_loss': 0,
-        'TP': 0,
-        'FP': 0,
-        'FN': 0,
-        'TN': 0,
+        'validation_accuracy': 0,
         'validation_update': False
     }
 
@@ -91,7 +87,9 @@ def train(net,
         # Model Training
         train_loss = 0.
         validation_loss = 0.
-        confussion_matrix = np.zeros((2,2))
+        count = 0
+        TP = 0
+        confussion_matrix = None #np.zeros((n_classes,n_classes))
         net.train() #Set network to train mode.
         if 'binary_labels' in locals():
             del binary_labels
@@ -104,15 +102,10 @@ def train(net,
                 data = data.to(device)
                 labels = labels.to(device)
 
-                # Create binary labels to remove morphological subclassifications (for MiraBest) ### IS THIS STILL NECESSARY?
-                binary_labels = np.zeros(labels.size(), dtype=int)
-                binary_labels = np.where(labels.cpu().numpy()<class_splitting_index, binary_labels, binary_labels+1)
-                binary_labels = torch.from_numpy(binary_labels).to(device)
-
                 # Loss & backpropagation
                 pred = net.forward(data)
                 optimizer.zero_grad()
-                loss = loss_function(pred,binary_labels)
+                loss = loss_function(pred, labels)
                 loss.backward(retain_graph=True)
                 if scheduler == None:
                     optimizer.step()
@@ -128,29 +121,22 @@ def train(net,
                 data = data.to(device)
                 labels = labels.to(device)
 
-                # Create binary labels to remove morphological subclassifications
-                binary_labels = np.zeros(labels.size(), dtype=int)
-                binary_labels = np.where(labels.cpu().numpy()<class_splitting_index, binary_labels, binary_labels+1)
-                binary_labels = torch.from_numpy(binary_labels).to(device)
-
                 outputs = net.forward(data)
-                loss = loss_function(outputs, binary_labels)
+                loss = loss_function(outputs, labels)
                 validation_loss += (loss.item()*data.size(0))
 
                 predictions = np.argmax(outputs.detach().cpu().numpy(), axis=1)
-                target_values = binary_labels.detach().cpu().numpy()
-                for x, y in zip(predictions, target_values):
-                    confussion_matrix[x,y] += 1
+                target_values = labels.detach().cpu().numpy()
+
+                TP += np.sum(np.where(target_values==predictions,1,0))
+                count += target_values.shape[0]
 
         # Average losses (scaled according to validation dataset size)
         validation_loss = validation_loss/(len(valid_loader.dataset)*augmentation_loops)
         train_loss = train_loss/(len(train_loader.dataset)*augmentation_loops)
         training_results['train_loss'] = train_loss
         training_results['validation_loss'] = validation_loss
-        training_results['TP'] = confussion_matrix[0,0]
-        training_results['FP'] = confussion_matrix[0,1]
-        training_results['FN'] = confussion_matrix[1,0]
-        training_results['TN'] = confussion_matrix[1,1]
+        training_results['validation_accuracy'] = TP / count
 
         if not quiet:
             print(f"Epoch:{epoch_count:3}\tTraining Loss: {training_results['train_loss']:8.6f}"
@@ -158,7 +144,7 @@ def train(net,
 
         # Save model if validation loss decreased
         if early_stopping and validation_loss <= validation_loss_min:
-            best_confussion_matrix = confussion_matrix
+            best_accuracy = TP/count
             if not quiet:
                 print(f"\tValidation Loss Down: \t({validation_loss_min:8.6f}-->{validation_loss:8.6f}) ... Updating saved model.")
             training_results['validation_update'] = True
@@ -195,9 +181,9 @@ def train(net,
     if output_model:
         output.append(net)
     if output_best_validation:
-        output.append(best_confussion_matrix)
+        output.append(best_accuracy)
         output.append(validation_loss_min)
     else:
         if early_stopping:
-            print(f"best_confussion_matrix:\n{best_confussion_matrix}")
+            print(f"best_accuracy:\n{best_accuracy}")
     return output

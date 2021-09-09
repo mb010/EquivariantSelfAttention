@@ -100,6 +100,7 @@ else:
         'Adadelta': optim.Adadelta(net.parameters(), lr=lr),
         'Adam': optim.Adam(net.parameters(), lr=lr, weight_decay=weight_decay)
         }
+
     optimizer  = optimizers[optim_name]
     model, conf_mat, validation_min = utils.train(
         net,
@@ -111,7 +112,7 @@ else:
         root_out_directory_addition=root_out_directory_addition,
         scheduler = None,
         save_validation_updates=True,
-        class_splitting_index=1,
+        n_classes = n_classes,
         loss_function=nn.CrossEntropyLoss(),
         output_model=True,
         early_stopping=True,
