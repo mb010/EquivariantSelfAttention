@@ -34,6 +34,7 @@ def train(net,
           save_validation_updates=True,
           loss_function = nn.CrossEntropyLoss(),
           output_model=True,
+          n_classes=2,
           early_stopping=True,
           output_best_validation=False,
           stop_after_epochs_without_update=200

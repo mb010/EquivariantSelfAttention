@@ -161,10 +161,10 @@ def save_evaluation(y_pred,
             'auc': [AUC]
         }
         for i in range(n_classes):
-            evaluation[f"{i} precision")] = [report[str(i)]['precision']]
-            evaluation[f"{i} recall")]    = [report[str(i)]['recall']]
-            evaluation[f"{i} f1-score")]  = [report[str(i)]['f1-score']]
-            evaluation[f"{i} support")]   = [report[str(i)]['support']]
+            evaluation[f"{i} precision"] = [report[str(i)]['precision']]
+            evaluation[f"{i} recall"]    = [report[str(i)]['recall']]
+            evaluation[f"{i} f1-score"]  = [report[str(i)]['f1-score']]
+            evaluation[f"{i} support"]   = [report[str(i)]['support']]
 
         df = pd.DataFrame.from_dict(evaluation)
         if os.path.isfile(PATH+'full_evaluations.csv'):
