@@ -25,6 +25,7 @@ class AGRadGalNet(nn.Module):
         normalisation = attention_normalisation
         kernel_size = int(kernel_size)
         imsize = int(imsize)
+        n_classes = int(n_classes)
         AG = int(attention_gates)
         assert aggregation_mode in ['concat', 'mean', 'deep_sup', 'ft'], 'Aggregation mode not recognised. Valid inputs include concat, mean, deep_sup or ft.'
         assert normalisation in ['sigmoid','range_norm','std_mean_norm','tanh','softmax'], f'Nomralisation not implemented. Can be any of: sigmoid, range_norm, std_mean_norm, tanh, softmax'
@@ -239,17 +240,15 @@ class AGRadGalNet(nn.Module):
         if type(out)==list:
             if self.aggregation_mode == 'mean':
                 out = torch.mean(torch.stack(out),dim=[0]) #This will output a single vector for classification instead of a list of classifications.
-                out = F.softmax(out,dim=1)
             elif self.aggregation_mode == 'deep_sup':
                 out = torch.mean(torch.stack(out),dim=[0])
-                out = F.softmax(out,dim=1)
             elif self.aggregation_mode == 'ft': # Might not be a problem
-                out = F.softmax(out,dim=1)
+                out = out
             else:
                 raise NotImplementedError
             return out
         else:
-            return F.softmax(out,dim=1)
+            return out
 
 
 

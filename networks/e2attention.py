@@ -32,6 +32,7 @@ class DNSteerableAGRadGalNet(nn.Module):
         N = int(number_rotations)
         kernel_size = int(kernel_size)
         imsize = int(imsize)
+        n_classes = int(n_classes)
         assert aggregation_mode in ['concat', 'mean', 'deep_sup', 'ft'], 'Aggregation mode not recognised. Valid inputs include concat, mean, deep_sup or ft.'
         assert normalisation in ['sigmoid','range_norm','std_mean_norm','tanh','softmax'], f'Nomralisation not implemented. Can be any of: sigmoid, range_norm, std_mean_norm, tanh, softmax'
         assert AG in [0,1,2,3], f'Number of Attention Gates applied (AG) must be an integer in range [0,3]. Currently AG={AG}'
@@ -288,17 +289,15 @@ class DNSteerableAGRadGalNet(nn.Module):
         if type(out)==list:
             if self.aggregation_mode == 'mean':
                 out = torch.mean(torch.stack(out),dim=[0]) #This will output a single vector for classification instead of a list of classifications.
-                out = F.softmax(out,dim=1)
             elif self.aggregation_mode == 'deep_sup':
                 out = torch.mean(torch.stack(out),dim=[0])
-                out = F.softmax(out,dim=1)
             elif self.aggregation_mode == 'ft': # Might not be a problem
-                out = F.softmax(out,dim=1)
+                out = out
             else:
                 raise NotImplementedError
             return out
         else:
-            return F.softmax(out,dim=1)
+            return out
 
 
 
