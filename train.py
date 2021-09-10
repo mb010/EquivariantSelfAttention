@@ -102,7 +102,7 @@ else:
         }
     n_classes = 2 if config['data']['dataset'] != 'MNIST' else 10
     optimizer  = optimizers[optim_name]
-    model, conf_mat, validation_min = utils.train(
+    model, accuracy, validation_min = utils.train(
         net,
         device,
         config,
@@ -118,7 +118,7 @@ else:
         early_stopping=True,
         output_best_validation=True
     )
-    print(f"""Confusion Matrix: {conf_mat}
+    print(f"""Accuracy: {accuracy}
     Learning Rate: {lr}
     Minimal Validation Loss: {validation_min}
     """)
