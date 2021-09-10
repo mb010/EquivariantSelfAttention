@@ -33,6 +33,7 @@ class AGRadGalNet(nn.Module):
         filters = [6,16,32,64,128]
         self.attention_out_sizes = []
         self.ag = AG
+        self.n_classes = n_classes
         self.filters = filters
         self.aggregation_mode = aggregation_mode
 
@@ -69,7 +70,7 @@ class AGRadGalNet(nn.Module):
 
         self.fc1 = nn.Linear(16*5*5,256) #channel_size * width * height
         self.fc2 = nn.Linear(256,256)
-        self.fc3 = nn.Linear(256, n_classes)
+        self.fc3 = nn.Linear(256, self.n_classes)
 
         self.module_order = ['conv1a', 'relu1a', 'bnorm1a', #1->6
                              'conv1b', 'relu1b', 'bnorm1b', #6->6
@@ -97,29 +98,29 @@ class AGRadGalNet(nn.Module):
             for i in range(self.ag):
                 concat_length += self.attention_filter_sizes[i]
             if aggregation_mode == 'concat':
-                self.classifier = nn.Linear(concat_length, n_classes)
+                self.classifier = nn.Linear(concat_length, self.n_classes)
                 self.aggregate = self.aggregation_concat
             else:
                 # Not able to initialise in a loop as the modules will not change device with remaining model.
                 self.classifiers = nn.ModuleList()
                 if self.ag>=1:
-                    self.classifiers.append(nn.Linear(self.attention_filter_sizes[0],2))
+                    self.classifiers.append(nn.Linear(self.attention_filter_sizes[0],self.n_classes))
                 if self.ag>=2:
-                    self.classifiers.append(nn.Linear(self.attention_filter_sizes[1],2))
+                    self.classifiers.append(nn.Linear(self.attention_filter_sizes[1],self.n_classes))
                 if self.ag>=3:
-                    self.classifiers.append(nn.Linear(self.attention_filter_sizes[2],2))
+                    self.classifiers.append(nn.Linear(self.attention_filter_sizes[2],self.n_classes))
                 if aggregation_mode == 'mean':
                     self.aggregate = self.aggregation_sep
                 elif aggregation_mode == 'deep_sup':
-                    self.classifier = nn.Linear(concat_length, n_classes)
+                    self.classifier = nn.Linear(concat_length, self.n_classes)
                     self.aggregate = self.aggregation_ds
                 elif aggregation_mode == 'ft':
-                    self.classifier = nn.Linear(n_classes*self.ag, n_classes)
+                    self.classifier = nn.Linear(self.n_classes*self.ag, self.n_classes)
                     self.aggregate = self.aggregation_ft
                 else:
                     raise NotImplementedError
         else:
-            self.classifier = nn.Linear((imsize//16)**2*64, n_classes)
+            self.classifier = nn.Linear((imsize//16)**2*64, self.n_classes)
             self.aggregate = lambda x: self.classifier(self.flatten(x))
 
 
