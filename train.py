@@ -93,7 +93,7 @@ else:
     # Train
     weight_decay = config.getfloat('training', 'weight_decay')
     root_out_directory_addition = '/'+config['data']['augment']
-    lr = config.getfloat('final_parameters', 'learning_rate')
+    lr = config.getfloat('training', 'learning_rate')
     optimizers = {
         'SGD': optim.SGD(net.parameters(), lr=lr, momentum=0.9),
         'Adagrad': optim.Adagrad(net.parameters(), lr=lr),
