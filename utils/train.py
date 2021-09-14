@@ -50,6 +50,7 @@ def train(net,
     # Read in values
     quiet          = config.getboolean('DEFAULT', 'quiet')
     early_stopping = config.getboolean('training', 'early_stopping')
+    epochs_without_update = 0
 
     # Initialise training / validation saving objects
     training_results = {
