@@ -98,7 +98,7 @@ else:
         'SGD': optim.SGD(net.parameters(), lr=lr, momentum=0.9),
         'Adagrad': optim.Adagrad(net.parameters(), lr=lr),
         'Adadelta': optim.Adadelta(net.parameters(), lr=lr),
-        'Adam': optim.Adam(net.parameters(), lr=lr, weight_decay=weight_decay)
+        'Adam': optim.Adam(net.parameters(), lr=lr)
         }
     n_classes = 2 if config['data']['dataset'] != 'MNIST' else 10
     optimizer  = optimizers[optim_name]
