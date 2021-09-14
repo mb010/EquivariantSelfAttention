@@ -37,7 +37,7 @@ def train(net,
           n_classes=2,
           early_stopping=True,
           output_best_validation=False,
-          stop_after_epochs_without_update=100
+          stop_after_epochs_without_update=500
          ):
     """Trains a network with a given config file on
     the training and validation sets as provided.
