@@ -33,4 +33,4 @@ echo '>>> Plotting figures for:' $CFG
 python create_figures.py --config $CFG
 
 echo '>>> Extracting data for:' $CFG
-python extract_best.py --config $CFG
+python -u extract_best.py --config $CFG
