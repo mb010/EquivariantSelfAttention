@@ -89,12 +89,10 @@ def train(net,
         # Model Training
         train_loss = 0.
         validation_loss = 0.
-        count = 0
-        TP = 0
+        count = 0.
+        TP = 0.
         confussion_matrix = None #np.zeros((n_classes,n_classes))
         net.train() #Set network to train mode.
-        if 'binary_labels' in locals():
-            del binary_labels
         if 'outputs' in locals():
             del outputs
 
