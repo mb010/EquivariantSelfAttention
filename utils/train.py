@@ -128,7 +128,7 @@ def train(net,
                 predictions = np.argmax(outputs.detach().cpu().numpy(), axis=1)
                 target_values = labels.detach().cpu().numpy()
 
-                TP += np.sum(np.where(target_values==predictions,1,0))
+                TP += np.sum(np.where(target_values==predictions, 1, 0))
                 count += target_values.shape[0]
 
         # Average losses (scaled according to validation dataset size)

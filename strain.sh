@@ -26,5 +26,5 @@ done < configs/experiment_configs.txt
 
 CFG=${CFGS[$SLURM_ARRAY_TASK_ID]}
 
-echo 'Training:' $CFG
+echo '>>> Training:' $CFG
 python -u train.py --config $CFG
