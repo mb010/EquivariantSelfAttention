@@ -29,7 +29,7 @@ class MiraBest_full(data.Dataset):
             puts it in root directory. If dataset is already downloaded, it is not
             downloaded again.
     """
-    
+
     base_folder = 'batches'
     url = "http://www.jb.man.ac.uk/research/MiraBest/full_dataset/MiraBest_full_batches.tar.gz"
     filename = "MiraBest_full_batches.tar.gz"
@@ -43,7 +43,7 @@ class MiraBest_full(data.Dataset):
                   ['data_batch_6', 'b7113d89ddd33dd179bf64cb578be78e'],
                   ['data_batch_7', '626c866b7610bfd08ac94ca3a17d02a1'],
                   ]
-    
+
     test_list = [
                  ['test_batch', '5e443302dbdf3c2003d68ff9ac95f08c'],
                  ]
@@ -52,8 +52,8 @@ class MiraBest_full(data.Dataset):
                 'key': 'label_names',
                 'md5': 'e1b5450577209e583bc43fbf8e851965',
                 }
-    
-    
+
+
     def __init__(self, root, train=True,
                  transform=None, target_transform=None,
                  download=False):
@@ -170,6 +170,46 @@ class MiraBest_full(data.Dataset):
         tmp = '    Target Transforms (if any): '
         fmt_str += '{0}{1}'.format(tmp, self.target_transform.__repr__().replace('\n', '\n' + ' ' * len(tmp)))
         return fmt_str
+
+class MBFR(MiraBest_full):
+    """
+    Child class to binarize FRI (0) & FRII (1)
+    [100, 102, 104, 110, 112] and [200, 201, 210]
+    """
+
+    def __init__(self, *args, **kwargs):
+        super(MBFRConfident, self).__init__(*args, **kwargs)
+
+        fr1_list = [0,1,2,3,4]
+        fr2_list = [5,6,7]
+        exclude_list = [8,9]
+
+        if exclude_list == []:
+            return
+        if self.train:
+            targets = np.array(self.targets)
+            exclude = np.array(exclude_list).reshape(1, -1)
+            exclude_mask = ~(targets.reshape(-1, 1) == exclude).any(axis=1)
+            fr1 = np.array(fr1_list).reshape(1, -1)
+            fr2 = np.array(fr2_list).reshape(1, -1)
+            fr1_mask = (targets.reshape(-1, 1) == fr1).any(axis=1)
+            fr2_mask = (targets.reshape(-1, 1) == fr2).any(axis=1)
+            targets[fr1_mask] = 0 # set all FRI to Class~0
+            targets[fr2_mask] = 1 # set all FRII to Class~1
+            self.data = self.data[exclude_mask]
+            self.targets = targets[exclude_mask].tolist()
+        else:
+            targets = np.array(self.targets)
+            exclude = np.array(exclude_list).reshape(1, -1)
+            exclude_mask = ~(targets.reshape(-1, 1) == exclude).any(axis=1)
+            fr1 = np.array(fr1_list).reshape(1, -1)
+            fr2 = np.array(fr2_list).reshape(1, -1)
+            fr1_mask = (targets.reshape(-1, 1) == fr1).any(axis=1)
+            fr2_mask = (targets.reshape(-1, 1) == fr2).any(axis=1)
+            targets[fr1_mask] = 0 # set all FRI to Class~0
+            targets[fr2_mask] = 1 # set all FRII to Class~1
+            self.data = self.data[exclude_mask]
+            self.targets = targets[exclude_mask].tolist()
 
 
 class MBFRConfident(MiraBest_full):
