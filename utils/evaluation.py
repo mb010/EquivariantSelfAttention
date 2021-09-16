@@ -19,12 +19,13 @@ from tqdm import tqdm
 from networks import AGRadGalNet, DNSteerableLeNet, DNSteerableAGRadGalNet #e2cnn module only works in python3.7+
 # Import various data classes
 from datasets import FRDEEPF
-from datasets import MiraBest_full, MBFRConfident, MBFRUncertain, MBHybrid
+from datasets import MiraBest_full, MBFR, MBFRConfident, MBFRUncertain, MBHybrid
 from datasets import MingoLoTSS, MLFR, MLFRTest
 from torchvision.datasets import MNIST
 
 # sklearn
 from sklearn.metrics import classification_report, roc_curve, auc
+from sklearn.preprocessing import label_binarize
 
 # Set seeds for reproduceability
 torch.manual_seed(42)
@@ -104,6 +105,8 @@ def save_evaluation(y_pred,
     to provided predictions and data labels
     and saves them to a csv.
     """
+    # Use n_classes to determine how to deal with predictions
+    n_classes = 2 if test_data!='MNIST' else 10
     if raw:
         # Cant be this naive. 3dim arrays wont save like this.
         #np.savetxt(PATH+'raw_predictions.txt', y_pred)
@@ -115,13 +118,31 @@ def save_evaluation(y_pred,
             torch.from_numpy(y_pred.reshape(shape)),
             dim=1
         )
-        fpr, tpr, thresholds = roc_curve(y_labels.flatten(), pred[:,1].numpy())
-        AUC = auc(fpr, tpr)
+
+        if n_classes == 2:
+            fpr, tpr, thresholds = roc_curve(y_labels.flatten(), pred[:,1].numpy())
+            AUC = auc(fpr, tpr)
+        else:
+            # Compute ROC curve and ROC area for each class
+            fpr = {}
+            tpr = {}
+            thresholds = {}
+            roc_auc = {}
+            # This would be useful for plotting
+            # Surpassing for quick look data using micro-averaging
+            #for i in range(n_classes):
+            #    tmp_labels = np.where(y_labels.flatten()==i, 1, 0)
+            #    fpr[i], tpr[i], thresholds[i] = roc_curve(tmp_labels, pred[:, i])
+            #    roc_auc[i] = auc(fpr[i], tpr[i])
+            fpr["micro"], tpr["micro"], thresholds["micro"] = roc_curve(tmp_labels.ravel(), y_score.ravel())
+            AUC = auc(fpr["micro"], tpr["micro"])
+
         report = classification_report(
             y_labels.flatten(),
             y_pred.argmax(axis=2).flatten(),
             output_dict=True
         )
+
         if print_report:
             classification_report(
                 y_labels.flatten(),
@@ -137,16 +158,14 @@ def save_evaluation(y_pred,
             'test_augmentation': [test_augmentation],
             'epoch': [epoch],
             'best': [best],
-            '0 precision': [report['0']['precision']],
-            '0 recall': [report['0']['recall']],
-            '0 f1-score': [report['0']['f1-score']],
-            '0 support': [report['0']['support']],
-            '1 precision': [report['1']['precision']],
-            '1 recall': [report['1']['recall']],
-            '1 f1-score': [report['1']['f1-score']],
-            '1 support': [report['1']['support']],
             'auc': [AUC]
         }
+        for i in range(n_classes):
+            evaluation[f"{i} precision"] = [report[str(i)]['precision']]
+            evaluation[f"{i} recall"]    = [report[str(i)]['recall']]
+            evaluation[f"{i} f1-score"]  = [report[str(i)]['f1-score']]
+            evaluation[f"{i} support"]   = [report[str(i)]['support']]
+
         df = pd.DataFrame.from_dict(evaluation)
         if os.path.isfile(PATH+'full_evaluations.csv'):
             df.to_csv(PATH+"full_evaluations.csv", mode='a', index=False, header=False)
@@ -170,7 +189,7 @@ def training_plot(
     csv_path = config['output']['directory'] +'/'+ path_supliment + config['output']['training_evaluation']
     df = pd.read_csv(csv_path)
     epochs = np.asarray(range(len(df)))
-    accuracy = (df.TP + df.TN)/(df.TP+df.TN + df.FP+df.FN)
+    accuracy = df.validation_accuracy#(df.TP + df.TN)/(df.TP+df.TN + df.FP+df.FN)
 
     plt.rcParams.update({'font.size': fontsize})
     fig, ax = plt.subplots(figsize=(16,9))
@@ -218,21 +237,30 @@ def training_plot(
 
 # ==========================================================
 # ROC Curve
-def plot_roc_curve(fpr, tpr, title=None):
-    AUC = auc(fpr,tpr)
-    plt.figure(figsize=(8,8))
-    plt.plot(fpr, tpr, linewidth='2')
-
-    plt.xlabel('False Positive Rate')
-    plt.ylabel('True Positive Rate')
-    if title==None:
-        plt.title(f'ROC Curve with AUC={AUC:.3f}')
+def plot_roc_curve(fpr, tpr, title=None, save=False):
+    fig, ax = plt.subplots(figsize=(8,8))
+    if type(fpr) != dict:
+        AUC = auc(fpr,tpr)
+        ax.plot(fpr, tpr, linewidth='2', label=f"ROC Curve with AUC={AUC:.3f}")
     else:
-        plt.title(title)
-    plt.grid('large')
-    plt.xlim(None,1)
-    plt.ylim(0,None)
-    plt.show()
+        AUC = {}
+        for key in fpr.keys():
+            AUC[key] = auc(fpr[key],tpr[key])
+            ax.plot(fpr[key], tpr[key], linewidth='2', label=f"{key}: AUC={AUC[key]:.3f}")
+
+    ax.set_xlabel('False Positive Rate')
+    ax.set_ylabel('True Positive Rate')
+    if title==None:
+        pass
+    else:
+        ax.set_title(title)
+    ax.grid(True, 'large')
+    ax.set_xlim(None,1)
+    ax.set_ylim(0,None)
+    if not save:
+        fig.show()
+    else:
+        fig.savefig(save)
 
 # ==========================================================
 # Binary Confusion Matrix

@@ -32,6 +32,7 @@ class DNSteerableAGRadGalNet(nn.Module):
         N = int(number_rotations)
         kernel_size = int(kernel_size)
         imsize = int(imsize)
+        n_classes = int(n_classes)
         assert aggregation_mode in ['concat', 'mean', 'deep_sup', 'ft'], 'Aggregation mode not recognised. Valid inputs include concat, mean, deep_sup or ft.'
         assert normalisation in ['sigmoid','range_norm','std_mean_norm','tanh','softmax'], f'Nomralisation not implemented. Can be any of: sigmoid, range_norm, std_mean_norm, tanh, softmax'
         assert AG in [0,1,2,3], f'Number of Attention Gates applied (AG) must be an integer in range [0,3]. Currently AG={AG}'
@@ -40,6 +41,7 @@ class DNSteerableAGRadGalNet(nn.Module):
 
         self.attention_out_sizes = []
         self.ag = AG
+        self.n_classes = n_classes
         self.filters = filters
         self.aggregation_mode = aggregation_mode
 
@@ -97,7 +99,7 @@ class DNSteerableAGRadGalNet(nn.Module):
 
         self.fc1 = nn.Linear(16*5*5,256) #channel_size * width * height
         self.fc2 = nn.Linear(256,256)
-        self.fc3 = nn.Linear(256, n_classes)
+        self.fc3 = nn.Linear(256, self.n_classes)
         self.dummy = nn.Parameter(torch.empty(0))
 
         self.module_order = ['conv1a', 'relu1a', 'bnorm1a', #1->6
@@ -126,29 +128,29 @@ class DNSteerableAGRadGalNet(nn.Module):
             for i in range(self.ag):
                 concat_length += self.attention_filter_sizes[i]
             if aggregation_mode == 'concat':
-                self.classifier = nn.Linear(concat_length, n_classes)
+                self.classifier = nn.Linear(concat_length, self.n_classes)
                 self.aggregate = self.aggregation_concat
             else:
                 # Not able to initialise in a loop as the modules will not change device with remaining model.
                 self.classifiers = nn.ModuleList()
                 if self.ag>=1:
-                    self.classifiers.append(nn.Linear(self.attention_filter_sizes[0], 2))
+                    self.classifiers.append(nn.Linear(self.attention_filter_sizes[0], self.n_classes))
                 if self.ag>=2:
-                    self.classifiers.append(nn.Linear(self.attention_filter_sizes[1], 2))
+                    self.classifiers.append(nn.Linear(self.attention_filter_sizes[1], self.n_classes))
                 if self.ag>=3:
-                    self.classifiers.append(nn.Linear(self.attention_filter_sizes[2], 2))
+                    self.classifiers.append(nn.Linear(self.attention_filter_sizes[2], self.n_classes))
                 if aggregation_mode == 'mean':
                     self.aggregate = self.aggregation_sep
                 elif aggregation_mode == 'deep_sup':
-                    self.classifier = nn.Linear(concat_length, n_classes)
+                    self.classifier = nn.Linear(concat_length, self.n_classes)
                     self.aggregate = self.aggregation_ds
                 elif aggregation_mode == 'ft':
-                    self.classifier = nn.Linear(n_classes*self.ag, n_classes)
+                    self.classifier = nn.Linear(self.n_classes*self.ag, self.n_classes)
                     self.aggregate = self.aggregation_ft
                 else:
                     raise NotImplementedError
         else:
-            self.classifier = nn.Linear((150//16)**2*64, n_classes)
+            self.classifier = nn.Linear((150//16)**2*64, self.n_classes)
             self.aggregate = lambda x: self.classifier(self.flatten(x))
 
 
@@ -288,17 +290,15 @@ class DNSteerableAGRadGalNet(nn.Module):
         if type(out)==list:
             if self.aggregation_mode == 'mean':
                 out = torch.mean(torch.stack(out),dim=[0]) #This will output a single vector for classification instead of a list of classifications.
-                out = F.softmax(out,dim=1)
             elif self.aggregation_mode == 'deep_sup':
                 out = torch.mean(torch.stack(out),dim=[0])
-                out = F.softmax(out,dim=1)
             elif self.aggregation_mode == 'ft': # Might not be a problem
-                out = F.softmax(out,dim=1)
+                out = out
             else:
                 raise NotImplementedError
             return out
         else:
-            return F.softmax(out,dim=1)
+            return out
 
 
 

@@ -1,0 +1,32 @@
+# Model Testing
+5kernel_bowles2021_mirabestconf_RandAug.cfg
+5kernel_scaife2021_mirabestconf_RandAug.cfg
+5kernel_D16_scaife2021_mirabestconf_RandAug.cfg
+5kernel_C4_attention_mirabestconf_RandAug.cfg
+5kernel_C8_attention_mirabestconf_RandAug.cfg
+5kernel_C16_attention_mirabestconf_RandAug.cfg
+5kernel_D4_attention_mirabestconf_RandAug.cfg
+5kernel_D8_attention_mirabestconf_RandAug.cfg
+5kernel_D16_attention_mirabestconf_RandAug.cfg
+#
+# Kernel Testing
+#5kernel_bowles2021_mirabestconf_RandAug.cfg # Already trained in 'Model Testing'
+#5kernel_scaife2021_mirabestconf_RandAug.cfg # Already trained in 'Model Testing'
+#5kernel_D8_attention_mirabestconf_RandAug.cfg # Already trained in 'Model Testing'
+7kernel_bowles2021_mirabestconf_RandAug.cfg
+7kernel_scaife2021_mirabestconf_RandAug.cfg
+7kernel_D8_attention_mirabestconf_RandAug.cfg
+9kernel_bowles2021_mirabestconf_RandAug.cfg
+9kernel_scaife2021_mirabestconf_RandAug.cfg
+9kernel_D8_attention_mirabestconf_RandAug.cfg
+#
+# Data set Testing
+#5kernel_bowles2021_mirabestconf_RandAug.cfg # Already trained in 'Model Testing'
+#5kernel_scaife2021_mirabestconf_RandAug.cfg # Already trained in 'Model Testing'
+#5kernel_D8_attention_mirabestconf_RandAug.cfg # Already trained in 'Model Testing'
+5kernel_bowles2021_mingolotss_RandAug.cfg
+5kernel_scaife2021_mingolotss_RandAug.cfg
+5kernel_D8_attention_mingolotss_RandAug.cfg
+5kernel_bowles2021_rmnist_RandAug.cfg
+5kernel_scaife2021_rmnist_RandAug.cfg
+5kernel_D8_attention_rmnist_RandAug.cfg

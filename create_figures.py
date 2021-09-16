@@ -23,7 +23,7 @@ import utils
 from networks import AGRadGalNet, DNSteerableLeNet, DNSteerableAGRadGalNet, VanillaLeNet #e2cnn module only works in python3.7+
 # Import various data classes
 from datasets import FRDEEPF
-from datasets import MiraBest_full, MBFRConfident, MBFRUncertain, MBHybrid
+from datasets import MiraBest_full, MBFR, MBFRConfident, MBFRUncertain, MBHybrid
 from datasets import MingoLoTSS, MLFR, MLFRTest
 from torchvision.datasets import MNIST
 

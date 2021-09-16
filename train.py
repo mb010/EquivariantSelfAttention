@@ -19,7 +19,7 @@ import utils
 from networks import AGRadGalNet, VanillaLeNet, testNet, DNSteerableLeNet, DNSteerableAGRadGalNet #e2cnn module only works in python3.7+
 # Import various data classes
 from datasets import FRDEEPF
-from datasets import MiraBest_full, MBFRConfident, MBFRUncertain, MBHybrid
+from datasets import MiraBest_full, MBFR, MBFRConfident, MBFRUncertain, MBHybrid
 from datasets import MingoLoTSS, MLFR, MLFRTest
 from torchvision.datasets import MNIST
 
@@ -93,15 +93,16 @@ else:
     # Train
     weight_decay = config.getfloat('training', 'weight_decay')
     root_out_directory_addition = '/'+config['data']['augment']
-    lr = config.getfloat('final_parameters', 'learning_rate')
+    lr = config.getfloat('training', 'learning_rate')
     optimizers = {
         'SGD': optim.SGD(net.parameters(), lr=lr, momentum=0.9),
         'Adagrad': optim.Adagrad(net.parameters(), lr=lr),
         'Adadelta': optim.Adadelta(net.parameters(), lr=lr),
-        'Adam': optim.Adam(net.parameters(), lr=lr, weight_decay=weight_decay)
+        'Adam': optim.Adam(net.parameters(), lr=lr)
         }
+    n_classes = 2 if config['data']['dataset'] != 'MNIST' else 10
     optimizer  = optimizers[optim_name]
-    model, conf_mat, validation_min = utils.train(
+    model, accuracy, validation_min = utils.train(
         net,
         device,
         config,
@@ -111,13 +112,13 @@ else:
         root_out_directory_addition=root_out_directory_addition,
         scheduler = None,
         save_validation_updates=True,
-        class_splitting_index=1,
+        n_classes = n_classes,
         loss_function=nn.CrossEntropyLoss(),
         output_model=True,
         early_stopping=True,
         output_best_validation=True
     )
-    print(f"""Confusion Matrix: {conf_mat}
+    print(f"""Accuracy: {accuracy}
     Learning Rate: {lr}
     Minimal Validation Loss: {validation_min}
     """)

@@ -75,10 +75,11 @@ class testNet(nn.Module):
 # -----------------------------------------------------------------------------
 
 class VanillaLeNet(nn.Module):
-    def __init__(self, base, in_chan=1, out_chan=2, imsize=150, kernel_size=5, N=None, quiet=True):
+    def __init__(self, base, in_chan=1, n_classes=2, imsize=150, kernel_size=5, N=None, quiet=True):
         super(VanillaLeNet, self).__init__()
         kernel_size = int(kernel_size)
         imsize = int(imsize)
+        out_chan = int(n_classes)
 
         z = imsize//2//2
 
@@ -221,7 +222,7 @@ class DNSteerableLeNet(nn.Module):
         self,
         base='DNSteerableLeNet',
         in_chan=1,
-        out_chan=2,
+        n_classes=2,
         imsize=150,
         kernel_size=5,
         N=8,
@@ -229,6 +230,7 @@ class DNSteerableLeNet(nn.Module):
         number_rotations=None):
         super(DNSteerableLeNet, self).__init__()
         kernel_size = int(kernel_size)
+        out_chan = int(n_classes)
 
         if number_rotations != None:
             N = int(number_rotations)

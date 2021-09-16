@@ -4,7 +4,7 @@
 #SBATCH --constraint=A100
 #SBATCH --mail-type=END,FAIL
 #SBATCH --mail-user=micah.bowles@postgrad.manchester.ac.uk
-#SBATCH --time=7-00:00:00
+#SBATCH --time=14-00:00:00
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=17
 #SBATCH --no-reque
@@ -26,5 +26,5 @@ done < configs/experiment_configs.txt
 
 CFG=${CFGS[$SLURM_ARRAY_TASK_ID]}
 
-echo 'Training:' $CFG
-python train.py --config $CFG
+echo '>>> Training:' $CFG
+python -u train.py --config $CFG
