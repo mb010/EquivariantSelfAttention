@@ -178,7 +178,7 @@ class MBFR(MiraBest_full):
     """
 
     def __init__(self, *args, **kwargs):
-        super(MBFRConfident, self).__init__(*args, **kwargs)
+        super(MBFR, self).__init__(*args, **kwargs)
 
         fr1_list = [0,1,2,3,4]
         fr2_list = [5,6,7]
