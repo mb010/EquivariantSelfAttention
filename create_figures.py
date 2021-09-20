@@ -90,8 +90,8 @@ model = utils.utils.load_model(config, load_model='best', device=device, path_su
 
 # Define interesting sources for each data set_title
 interesting_sources_dict = {
-    'MBFR': [45,20,57],
-    'MBFR_labels': [0,1,0],
+    'MBFR': [8,107, 95],
+    'MBFR_labels': [0,1,1],
     'MBFRUncertain': [3,32,30],
     'MBFRUncertain_labels': [0,1,1],
     'MBFRConfident': [3,32,30],
