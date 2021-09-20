@@ -69,9 +69,7 @@ if config['data']['dataset'] == 'MNIST':
 for d_cfg in data_configs:
     for augmentation in augmentations:
         path_supliment = config['data']['augment']+'/'
-        model = utils.utils.load_model(confi    fpr = {}
-            tpr = {}
-            thresholds = {g, load_model='best', device=device, path_supliment=path_supliment)
+        model = utils.utils.load_model(config, load_model='best', device=device, path_supliment=path_supliment)
         data_config = ConfigParser.ConfigParser(allow_no_value=True)
         data_config.read('configs/'+d_cfg)
         data  = utils.data.load(
