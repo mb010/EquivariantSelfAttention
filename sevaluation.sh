@@ -27,10 +27,10 @@ done < configs/experiment_configs.txt
 CFG=${CFGS[$SLURM_ARRAY_TASK_ID]}
 
 echo '>>> Evaluating:' $CFG
-python evaluate.py --config $CFG
+python -u evaluate.py --config $CFG
 
 echo '>>> Plotting figures for:' $CFG
-python create_figures.py --config $CFG
+python -u create_figures.py --config $CFG
 
 echo '>>> Extracting data for:' $CFG
 python -u extract_best.py --config $CFG
