@@ -430,7 +430,7 @@ if mp4_plot:
             output, error = process.communicate()
             print(f">>> OUTPUT FROM ffmpeg:\n{output}\n\n >>> ERROR FROM ffmpeg:\n{error}")
 
-            out_path = out_path.replace('*','%03d')
+            out_path = out_path.replace('*','%03d').replace(' ', '\ ')
             bashCommand = f"rm '{out_path}'"
             process = subprocess.Popen(bashCommand.split(), stdout=subprocess.PIPE)
             output, error = process.communicate()
