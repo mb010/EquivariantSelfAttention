@@ -38,9 +38,9 @@ config.read(f"configs/{config_name}")
 
 workingdir = config['output']['directory']
 
-train_loader, valid_loader  = utils.data.load(
+test_data_loader = utils.data.load(
     config,
-    train=True,
+    train=False,
     augmentation='config',
     data_loader=True
 )
@@ -65,7 +65,7 @@ model = utils.utils.load_model(config, load_model='best', device=device, path_su
 
 utils.fisher.WeightTransfer(model, net)
 del(model)
-Fishers, Rank, FR = utils.fisher.CalcFIM(net, train_loader, n_iterations)
+Fishers, Rank, FR = utils.fisher.CalcFIM(net, test_data_loader, n_iterations)
 
 print("Saving Fisher Realisations to a Pickle File...")
 pickle.dump(Fishers, open(f"{workingdir}/fishers.p", "wb"))
