@@ -38,7 +38,7 @@ config.read(f"configs/{config_name}")
 
 # Selecting figures to save:
 if config['model']['base'] in ['DNSteerableAGRadGalNet', 'AGRadGalNet']:
-    mp4_plot           = True
+    mp4_plot           = False
     distribution_plots = True
     individual_plot    = True
     training_plot      = True
@@ -105,11 +105,6 @@ interesting_sources_dict = {
 ################################################################################
 ### Pixel Attention Distribution ###
 # Find or remake code for distrubtion of pixel values.
-
-################################################################################
-### MP4 Figure ###
-# Make 2d figure for MP4 equivalent explanation for a paper.
-# (Compare with Scaife2021 paper & FAIR ViT papers?)
 
 ################################################################################
 ### Individual Source Maps ###
