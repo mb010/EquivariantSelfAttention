@@ -170,6 +170,9 @@ class AGRadGalNet(nn.Module):
     def apply_argmax_softmax(pred):
         log_p = F.softmax(pred, dim=1)
         return log_p
+    
+    def last_weights(self):
+        return self.classifier
 
 
     #######################################

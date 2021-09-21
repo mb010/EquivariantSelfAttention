@@ -71,6 +71,9 @@ class testNet(nn.Module):
         x = self.fc3(x)
 
         return x
+    
+    def last_weights(self):
+        return self.fc3
 
 # -----------------------------------------------------------------------------
 
@@ -134,6 +137,9 @@ class VanillaLeNet(nn.Module):
         x = self.fc3(x)
 
         return x
+    
+    def last_weights(self):
+        return self.fc3
 
 # -----------------------------------------------------------------------------
 
@@ -214,6 +220,9 @@ class CNSteerableLeNet(nn.Module):
         x = self.fc3(x)
 
         return x
+    
+    def last_weights(self):
+        return self.fc3
 
 # -----------------------------------------------------------------------------
 
@@ -306,6 +315,9 @@ class DNSteerableLeNet(nn.Module):
         x = self.fc3(x)
 
         return x
+    
+    def last_weights(self):
+        return self.fc3
 
 # -----------------------------------------------------------------------------
 
@@ -379,6 +391,9 @@ class DNRestrictedLeNet(nn.Module):
         x = self.fc3(x)
 
         return x
+    
+    def last_weights(self):
+        return self.fc3
 
 # -----------------------------------------------------------------------------
 
@@ -466,6 +481,9 @@ class HMTNet(nn.Module):
         v = self.fc3(x)
 
         return v
+    
+    def last_weights(self):
+        return self.fc3
 
 
 # -----------------------------------------------------------------------------
