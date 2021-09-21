@@ -24,6 +24,8 @@ from datasets import MingoLoTSS, MLFR, MLFRTest
 import torch.nn.functional as F
 import pickle
 
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
 args        = utils.parse_args()
 config_name = args['config']
 try:
@@ -63,12 +65,14 @@ model = utils.utils.load_model(config, load_model='best', device=device, path_su
 
 utils.fisher.WeightTransfer(model, net)
 del(model)
-Fishers, Rank, FR = utils.fisher.CalcFIM(net, train_loader, n_iterations)
+Fishers, Rank, FR = utils.fisher.CalcFIM(net, train_loader, n_iterations, final_layer_name)
 
 print("Saving Fisher Realisations to a Pickle File...")
 pickle.dump(Fishers, open(f"{workingdir}/fishers.p", "wb"))
+print("Saving FR Norm Realisations to a Pickle File")
+pickle.dump(FR, open(f"{workingdir}/raonorm.p", "wb"))
 
-EV =[]
+EV = []
 nbins = 8
 plt.subplot(111)
 #normalise fisher
@@ -83,7 +87,6 @@ plt.xlabel("Eigenvalue")
 plt.title("Fisher Matrix Eigenspectrum")
 plt.savefig(f"{workingdir}/Eigen.png")
 plt.close()
-
 
 plt.subplot(111)
 

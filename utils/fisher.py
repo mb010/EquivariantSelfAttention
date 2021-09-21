@@ -28,8 +28,15 @@ from tqdm import tqdm
 #Ensure the GPU is being used for the calculation
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+
+
+
 #Copies over the weights of the network
 def WeightTransfer(referenceModel, newModel):
+    newModel.parameters = referenceModel.parameters
+    #Clear the model were copying weights from to clear up GPU memory.
+    del(referenceModel)
+    '''
     Conv1a = referenceModel.conv1a.weights
     Conv1b = referenceModel.conv1b.weights
     Conv1c = referenceModel.conv1c.weights
@@ -73,10 +80,11 @@ def WeightTransfer(referenceModel, newModel):
     newModel.attention1.phi.weight=Phi1 
     newModel.attention2.phi.weight=Phi2 
     newModel.attention3.phi.weight=Phi3
+    '''
     #Set weights of the newModel to be untrainable apart from last fully connected layer
     for name, param in newModel.named_parameters():
         param.requires_grad=False
-    newModel.classifier.weight.requires_grad=True
+    newModel.last_weights().weight.requires_grad=True
     return;
     
 # Make the math imports to calculate metrics related to the Fisher Information, such as the Jacobian/Hessian
@@ -117,12 +125,12 @@ def CalcFIM(net, train_loader, n_iterations, approximation=None):
     
     realisations_torch = torch.zeros((Number_of_FisherIts,n_weight,n_weight)) #All fishers
     for i in tqdm(range(Number_of_FisherIts)):
-        torch.nn.init.uniform_(net.classifier.weight, -1., 1.)
+        torch.nn.init.uniform_(net.last_weights().weight, -1., 1.)
         #torch.nn.init.normal_(net.classifier.weight, mean=0.0, std=1.0)
         #torch.nn.init.xavier_uniform_(net.classifier.weight, gain=1.0)
         #torch.nn.init.kaiming_normal(net.classifier.weight)
         #torch.nn.init.orthogonal_(net.classifier.weight, gain=1.0)
-        w = net.classifier.weight
+        w = net.last_weights().weight
         flat_w = w.view(-1).cpu()
         fisher = torch.zeros((n_weight,n_weight)).to('cuda')
         for x_n, y_n in train_loader:
