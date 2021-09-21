@@ -39,9 +39,9 @@ config.read(f"configs/{config_name}")
 workingdir = config['output']['directory']
 
 train_loader, valid_loader  = utils.data.load(
-    config, 
-    train=True, 
-    augmentation='config', 
+    config,
+    train=True,
+    augmentation='config',
     data_loader=True
 )
 
@@ -59,13 +59,13 @@ early_stopping = config.getboolean('training', 'early_stopping')
 root = config['data']['directory']
 os.makedirs(root, exist_ok=True)
 
-                
+
 path_supliment = config['data']['augment']+'/'
 model = utils.utils.load_model(config, load_model='best', device=device, path_supliment=path_supliment)
 
 utils.fisher.WeightTransfer(model, net)
 del(model)
-Fishers, Rank, FR = utils.fisher.CalcFIM(net, train_loader, n_iterations, final_layer_name)
+Fishers, Rank, FR = utils.fisher.CalcFIM(net, train_loader, n_iterations)
 
 print("Saving Fisher Realisations to a Pickle File...")
 pickle.dump(Fishers, open(f"{workingdir}/fishers.p", "wb"))
@@ -80,7 +80,7 @@ normalised_fishers = utils.fisher.normalise(Fishers.cpu())
 #Save Plots of the Eigenvalues, Rank and FR Norm to the relevant model
 for i in Fishers:
     EV = np.append(EV,torch.eig(i, eigenvectors=False,  out=None)[0][:,0].detach().numpy())
-    
+
 plt.hist(EV, bins=nbins, rwidth=0.8, color='r')
 plt.ylabel("Total Counts")
 plt.xlabel("Eigenvalue")
