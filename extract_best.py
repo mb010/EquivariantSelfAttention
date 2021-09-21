@@ -40,5 +40,5 @@ os.makedirs(OUT_PATH, exist_ok=True)
 tmp = shutil.copy(MODEL_PATH, OUT_PATH)
 for f in files:
     if '.pt' not in f:
-        #if (len(f.split('_'))!=4) or ('amap' in f): # Uncomment to ignore MP4 images if I like
-        tmp = shutil.copy(MODEL_EVAL_PATH+f, OUT_PATH)
+        if not (('tmp' in f) and ('.png' in f)): # Uncomment to ignore MP4 images if I like
+            tmp = shutil.copy(MODEL_EVAL_PATH+f, OUT_PATH)
