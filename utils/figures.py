@@ -8,13 +8,26 @@ import ast
 
 import math
 import numpy as np
-import pylab as pl
+import matplotlib.pyplot as plt
 import pandas as pd
 from matplotlib.offsetbox import (OffsetImage, AnnotationBbox)
 
 # ----------------------------------------------------------
 ### Adapted from https://github.com/as595/E2CNNRadGal/blob/main/utils.py ###
 # ----------------------------------------------------------
+
+def parse_args():
+    """
+        Parse the command line arguments
+        """
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-C','--config', default="myconfig.txt", required=True, help='Name of the input config file')
+
+    args, __ = parser.parse_known_args()
+
+    return vars(args)
+
+# -----------------------------------------------------------
 
 def parse_config(filename):
 
@@ -166,10 +179,11 @@ def make_linemarker(x,y,dx,col,ax):
 
 # -----------------------------------------------------------------------------
 
-def fr_rotation_test(model, data, target, idx, device):
+def fr_rotation_test(model, data, target, idx, device, save='', show_images=True, figsize=(8,4)):
 
     T = 100
-    rotation_list = range(0, 180, 20)
+    rotation_list = range(0, 360, 20)
+    rotation_list_images = np.linspace(0, 360, 6)
     #print("True classification: ",target[0].item())
 
     image_list = []
@@ -195,7 +209,7 @@ def fr_rotation_test(model, data, target, idx, device):
         for i in range(T):
             x = model(data_rotate)
             input_list.append(torch.unsqueeze(x, 0).cpu())
-            output_list.append(torch.unsqueeze(F.softmax(x,dim=1), 0).cpu())
+            output_list.append(torch.unsqueeze(F.softmax(x, dim=1), 0).cpu())
 
         # calculate the mean output for each target:
         output_mean = np.squeeze(torch.cat(output_list, 0).mean(0).data.cpu().numpy())
@@ -204,19 +218,19 @@ def fr_rotation_test(model, data, target, idx, device):
         outp_list.append(np.squeeze(torch.cat(output_list, 0).data.numpy()))
         inpt_list.append(np.squeeze(torch.cat(input_list, 0).data.numpy()))
 
-        #print ('rotation degree', str(r), 'Predict : {} - {}'.format(output_mean.argmax(),output_mean))
-
     preds = np.array([0,1])
     classes = np.array(["FRI","FRII"])
 
-    outp_list = np.array(outp_list)
-    inpt_list = np.array(inpt_list)
-    rotation_list = np.array(rotation_list)
+    outp_list = np.asarray(outp_list)
+    inpt_list = np.asarray(inpt_list)
+    rotation_list = np.asarray(rotation_list)
 
     colours=["b","r"]
 
-    #fig1, (a0, a1) = pl.subplots(2, 1, gridspec_kw={'height_ratios': [8,1]})
-    fig2, (a2, a3) = pl.subplots(2, 1, gridspec_kw={'height_ratios': [8,1]})
+    if show_images:
+        fig2, (a2, a3) = plt.subplots(2, 1, gridspec_kw={'height_ratios': [8,1]}, figsize=(8,6))
+    else:
+        fig2, a2 = plt.subplots(figsize=figsize)
 
     eta = np.zeros(len(rotation_list))
     for i in range(len(rotation_list)):
@@ -224,52 +238,59 @@ def fr_rotation_test(model, data, target, idx, device):
         y = outp_list[i,:,1]
         eta[i] = overlapping(x, y)
 
-    #a0.set_title("Input")
     if np.mean(eta)>=0.01:
         a2.set_title(r"$\langle \eta \rangle = $ {:.2f}".format(np.mean(eta)))
     else:
         a2.set_title(r"$\langle \eta \rangle < 0.01$")
 
-    dx = 0.8*(rotation_list[1]-rotation_list[0])
+    dx = 0.75*(rotation_list[1]-rotation_list[0])
     for pred in preds:
         col = colours[pred]
-        #a0.plot(rotation_list[0],inpt_list[0,0,pred],marker=",",c=col,label=str(pred))
-        a2.plot(rotation_list[0],outp_list[0,0,pred],marker=",",c=col,label=classes[pred])
+        a2.plot(rotation_list[0], outp_list[0,0,pred], marker=",", c=col, label=classes[pred])
+        #x = outp_list[:,:,pred]
+        #y = rotation_list
+        #y = np.tile(y, (T))
+        #x, y = x.flatten(), y.flatten()
+        #a2.hist2d(y, x, bins=[len(rotation_list), 20])
+        #for i in range(T):
+            #a2.scatter(rotation_list, outp_list[:,i,pred], marker='_', c=col, alpha=0.2)
+
         for i in range(rotation_list.shape[0]):
-        #    make_linemarker(rotation_list[i],inpt_list[i,:,pred],dx,col,a0)
             make_linemarker(rotation_list[i],outp_list[i,:,pred],dx,col,a2)
 
-    #a2.plot(rotation_list, eta)
 
-    #a0.legend()
-    a2.legend(loc='center right')
-    #a0.axis([0,180,0,1])
-    #a0.set_xlabel("Rotation [deg]")
+    a2.set_ylabel("Model Output")
     a2.set_xlabel("Rotation [deg]")
-    #a1.axis([0,180,0,1])
-    a3.axis([0,180,0,1])
-    #a1.axis('off')
-    a3.axis('off')
+    if show_images:
+        a3.axis([0,360,0,1])
+        a3.axis('off')
 
-    imsize = data.size()[2]
-    mask = build_mask(imsize, margin=1)
+        imsize = data.size()[2]
+        mask = build_mask(imsize, margin=1)
 
-    for i in range(len(rotation_list)):
-        inc = 0.5*(180./len(rotation_list))
-        #positionimage(rotation_list[i]+inc, 0., a1, image_list[i][0, 0, :, :].data.numpy(), zoom=0.32)
-        positionimage(rotation_list[i]+inc, 0., a3, mask[0,0,:,:]*image_list[i][0, 0, :, :].data.cpu().numpy(), zoom=0.32)
+        for i in range(len(rotation_list_images)):
+            inc = 0.5*(360./len(rotation_list_images))
+            #positionimage(rotation_list[i]+inc, 0., a1, image_list[i][0, 0, :, :].data.numpy(), zoom=0.32)
+            index = int(i/len(rotation_list_images)*len(rotation_list))
+            print(index)
+            positionimage(
+                rotation_list_images[i]+inc, 0., a3,
+                mask[0,0,:,:]*image_list[index][0, 0, :, :].data.cpu().numpy(),
+                zoom=0.3
+            )
 
 
-    #fig1.tight_layout()
     fig2.tight_layout()
 
-    #fig1.subplots_adjust(bottom=0.15)
-    fig2.subplots_adjust(bottom=0.15)
+    if show_images:
+        fig2.subplots_adjust(bottom=0.15)
 
-    #pl.show()
-    fig2.savefig("./rotations/rotationtest_"+str(idx)+".png")
+    if save!='':
+        fig2.savefig(f"{save}{idx}.png")
+    else:
+        plt.show()
 
-    pl.close()
+    plt.close()
 
     return np.mean(eta), np.std(eta)
 
@@ -303,12 +324,12 @@ def overlapping(x, y, beta=0.1):
     eta_z = np.zeros(n_z)
     eta_z = np.minimum(f_x, f_y)
 
-    #pl.subplot(111)
-    #pl.plot(z, f_x, label=r"$f_x$")
-    #pl.plot(z, f_y, label=r"$f_y$")
-    #pl.plot(z, eta_z, label=r"$\eta_z$")
-    #pl.legend()
-    #pl.show()
+    #plt.subplot(111)
+    #plt.plot(z, f_x, label=r"$f_x$")
+    #plt.plot(z, f_y, label=r"$f_y$")
+    #plt.plot(z, eta_z, label=r"$\eta_z$")
+    #plt.legend()
+    #plt.show()
 
     return np.sum(eta_z)*dz
 
@@ -379,9 +400,3 @@ def eval_overlap():
     print(n)
 
     return
-
-def main():
-    pass
-
-if __name__ == '__main__':
-    main()
