@@ -60,6 +60,12 @@ os.makedirs(root, exist_ok=True)
 path_supliment = config['data']['augment']+'/'
 model = utils.utils.load_model(config, load_model='best', device=device, path_supliment=path_supliment)
 
+train_loader = utils.data.load(
+    config,
+    train=False,
+    augmentation='config',
+    data_loader=True
+)
 
 utils.fisher.WeightTransfer(model, net)
 del(model)
