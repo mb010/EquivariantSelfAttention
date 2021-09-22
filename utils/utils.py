@@ -32,7 +32,7 @@ def parse_args():
         """
     parser = argparse.ArgumentParser()
     parser.add_argument('-C','--config', default="myconfig.txt", required=True, help='Name of the input config file')
-
+    parser.add_argument('-I','--iterations', default=100, required=False, help='Number of realisations of the Fisher Information Matrix')
     args, __ = parser.parse_known_args()
 
     return vars(args)
