@@ -16,19 +16,6 @@ from matplotlib.offsetbox import (OffsetImage, AnnotationBbox)
 ### Adapted from https://github.com/as595/E2CNNRadGal/blob/main/utils.py ###
 # ----------------------------------------------------------
 
-def parse_args():
-    """
-        Parse the command line arguments
-        """
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-C','--config', default="myconfig.txt", required=True, help='Name of the input config file')
-
-    args, __ = parser.parse_known_args()
-
-    return vars(args)
-
-# -----------------------------------------------------------
-
 def parse_config(filename):
 
     config = ConfigParser.SafeConfigParser(allow_no_value=True)
@@ -392,3 +379,9 @@ def eval_overlap():
     print(n)
 
     return
+
+def main():
+    pass
+
+if __name__ == '__main__':
+    main()

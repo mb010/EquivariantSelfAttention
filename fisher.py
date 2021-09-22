@@ -26,7 +26,7 @@ import pickle
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-args        = utils.parse_args()
+args        = utils.utils.parse_args()
 config_name = args['config']
 n_iterations = int(args['iterations'])
 
