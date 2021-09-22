@@ -28,11 +28,8 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 args        = utils.parse_args()
 config_name = args['config']
-try:
-    n_iterations = int(args['iterations'])
-except:
-    print("Please specify the number of iterations by the flag --iterations, set to 100 for default")
-    n_iterations = 100;
+n_iterations = int(args['iterations'])
+
 config      = ConfigParser.ConfigParser(allow_no_value=True)
 config.read(f"configs/{config_name}")
 
@@ -63,51 +60,19 @@ os.makedirs(root, exist_ok=True)
 path_supliment = config['data']['augment']+'/'
 model = utils.utils.load_model(config, load_model='best', device=device, path_supliment=path_supliment)
 
+
 utils.fisher.WeightTransfer(model, net)
 del(model)
-Fishers, Rank, FR = utils.fisher.CalcFIM(net, test_data_loader, n_iterations)
+outputsize = config.getint('data', 'num_classes')
+Fishers, Rank, FR = utils.fisher.CalcFIM(net, train_loader, n_iterations, outputsize, workingdir)
 
-print("Saving Fisher Realisations to a Pickle File...")
-pickle.dump(Fishers, open(f"{workingdir}/fishers.p", "wb"))
-print("Saving FR Norm Realisations to a Pickle File")
-pickle.dump(FR, open(f"{workingdir}/raonorm.p", "wb"))
 
 EV = []
 nbins = 8
 plt.subplot(111)
 #normalise fisher
-normalised_fishers = utils.fisher.normalise(Fishers.cpu())
+normalised_fishers = utils.fisher.normalise(Fishers.cpu(),outputsize*len(net.last_weights().weight[0]))
 #Save Plots of the Eigenvalues, Rank and FR Norm to the relevant model
-for i in Fishers:
-    EV = np.append(EV,torch.eig(i, eigenvectors=False,  out=None)[0][:,0].detach().numpy())
-
-plt.hist(EV, bins=nbins, rwidth=0.8, color='r')
-plt.ylabel("Total Counts")
-plt.xlabel("Eigenvalue")
-plt.title("Fisher Matrix Eigenspectrum")
-plt.savefig(f"{workingdir}/Eigen.png")
-plt.close()
-
-plt.subplot(111)
-
-plt.hist(Rank, bins=nbins, rwidth=0.8, color='g', density=True)
-plt.ylabel("Normalised Counts")
-plt.xlabel("Matrix Rank")
-plt.title("Fisher Matrix Rank Distribution")
-MeanRank = np.mean(Rank)
-print(f"The Mean Rank obtained is {MeanRank} \n")
-plt.savefig(f"{workingdir}/Rank.png")
-
-plt.close()
-plt.subplot(111)
-
-FR2 = [np.abs(e) for e in FR]
-plt.hist(FR2, bins=nbins, rwidth = 0.8 ,color='b', density=True)
-plt.ylabel("Normalised Counts")
-plt.xlabel("Fisher Rao Norm")
-plt.title("Fisher Rao Norm Distribution")
-plt.savefig(f"{workingdir}/FRNorm.png")
-
 #----Calculate Effective Dimension Metrics----#
 #Normalise the Fisher Matrix
 ed = []
