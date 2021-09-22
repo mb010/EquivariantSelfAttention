@@ -7,7 +7,6 @@ venv
 data/mirabest
 data/frdeep
 data/mingo
-configs
 data/MNIST
 data/mirabestConfident/
 models/bowles2021
