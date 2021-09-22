@@ -17,6 +17,7 @@ from tqdm.notebook import trange, tqdm
 from scipy.special import logsumexp
 
 import utils
+import pickle
 # Ipmport various network architectures
 from networks import AGRadGalNet, DNSteerableLeNet, DNSteerableAGRadGalNet #e2cnn module only works in python3.7+
 # Import various data classes
@@ -70,7 +71,7 @@ net --> PyTorch Compatiable Model
 train_loader --> PyTorch/SKLearn Compatiable DataLoader Function
 n_iterations --> Number of realisations of the fisher matrix
 '''
-def CalcFIM(net, train_loader, n_iterations, outputsize, approximation=None):
+def CalcFIM(net, train_loader, n_iterations, outputsize, workingdir, approximation=None):
     #First we need to obtain the number of weights in the last fully connected layer and freeze the weights in every other layer
     Rank = []
     FR = []
@@ -121,6 +122,11 @@ def CalcFIM(net, train_loader, n_iterations, outputsize, approximation=None):
                 FR.append(wFw)
             except:
                 pass;
+        if (i%1000)==0:
+            print(f"Saving Fisher Realisations to a Pickle File for iteration {i}...")
+            pickle.dump(realisations_torch, open(f"{workingdir}/fishers.p", "wb"))
+            print(f"Saving FR Norm Realisations to a Pickle File for iteration {i}")
+            pickle.dump(FR, open(f"{workingdir}/raonorm.p", "wb"))
     return realisations_torch, Rank, FR;
 
 

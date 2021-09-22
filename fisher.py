@@ -64,13 +64,8 @@ model = utils.utils.load_model(config, load_model='best', device=device, path_su
 utils.fisher.WeightTransfer(model, net)
 del(model)
 outputsize = config.getint('data', 'num_classes')
-Fishers, Rank, FR = utils.fisher.CalcFIM(net, train_loader, n_iterations, outputsize)
+Fishers, Rank, FR = utils.fisher.CalcFIM(net, train_loader, n_iterations, outputsize, workingdir)
 
-
-print("Saving Fisher Realisations to a Pickle File...")
-pickle.dump(Fishers, open(f"{workingdir}/fishers.p", "wb"))
-print("Saving FR Norm Realisations to a Pickle File")
-pickle.dump(FR, open(f"{workingdir}/raonorm.p", "wb"))
 
 EV = []
 nbins = 8
