@@ -36,51 +36,6 @@ def WeightTransfer(referenceModel, newModel):
     newModel.parameters = referenceModel.parameters
     #Clear the model were copying weights from to clear up GPU memory.
     del(referenceModel)
-    '''
-    Conv1a = referenceModel.conv1a.weights
-    Conv1b = referenceModel.conv1b.weights
-    Conv1c = referenceModel.conv1c.weights
-    Conv2a = referenceModel.conv2a.weights
-    Conv2b = referenceModel.conv2b.weights
-    Conv2c = referenceModel.conv2c.weights
-    Conv3a = referenceModel.conv3a.weights
-    Conv3b = referenceModel.conv3b.weights
-    Conv3c = referenceModel.conv3c.weights
-    Conv4a = referenceModel.conv4a.weights
-    Conv4b = referenceModel.conv4b.weights
-    Psi1 = referenceModel.attention1.psi.weight
-    Psi2 = referenceModel.attention2.psi.weight
-    Psi3 = referenceModel.attention3.psi.weight
-    Theta1 = referenceModel.attention1.theta.weight
-    Theta2 = referenceModel.attention2.theta.weight
-    Theta3 = referenceModel.attention3.theta.weight
-    Phi1 = referenceModel.attention1.phi.weight
-    Phi2 = referenceModel.attention2.phi.weight
-    Phi3 = referenceModel.attention3.phi.weight
-    #Delete the referenceModel from memory to improve memory
-    del(referenceModel)
-    #Initalise the new weights
-    newModel.conv1a.weights=Conv1a 
-    newModel.conv1b.weights=Conv1b 
-    newModel.conv1c.weights=Conv1c 
-    newModel.conv2a.weights=Conv2a 
-    newModel.conv2b.weights=Conv2b 
-    newModel.conv2c.weights=Conv2c 
-    newModel.conv3a.weights=Conv3a 
-    newModel.conv3b.weights=Conv3b 
-    newModel.conv3c.weights=Conv3c 
-    newModel.conv4a.weights=Conv4a 
-    newModel.conv4b.weights=Conv4b 
-    newModel.attention1.psi.weight=Psi1  
-    newModel.attention2.psi.weight=Psi2  
-    newModel.attention3.psi.weight=Psi3 
-    newModel.attention1.theta.weight=Theta1 
-    newModel.attention2.theta.weight=Theta2 
-    newModel.attention3.theta.weight=Theta3 
-    newModel.attention1.phi.weight=Phi1 
-    newModel.attention2.phi.weight=Phi2 
-    newModel.attention3.phi.weight=Phi3
-    '''
     #Set weights of the newModel to be untrainable apart from last fully connected layer
     for name, param in newModel.named_parameters():
         param.requires_grad=False
@@ -115,13 +70,13 @@ net --> PyTorch Compatiable Model
 train_loader --> PyTorch/SKLearn Compatiable DataLoader Function
 n_iterations --> Number of realisations of the fisher matrix
 '''
-def CalcFIM(net, train_loader, n_iterations, approximation=None):
+def CalcFIM(net, train_loader, n_iterations, outputsize, approximation=None):
     #First we need to obtain the number of weights in the last fully connected layer and freeze the weights in every other layer
     Rank = []
     FR = []
     print(f"Calculating {n_iterations} of the Fisher...")
     Number_of_FisherIts = n_iterations;
-    n_weight = 12
+    n_weight = outputsize * len(net.last_weights().weight[0])
     
     realisations_torch = torch.zeros((Number_of_FisherIts,n_weight,n_weight)) #All fishers
     for i in tqdm(range(Number_of_FisherIts)):
@@ -136,37 +91,36 @@ def CalcFIM(net, train_loader, n_iterations, approximation=None):
         for x_n, y_n in train_loader:
             x_n, y_n = x_n.to('cuda'), y_n.to('cuda')
             f_n = net(x_n)
+            logit = f_n
             f_n = F.softmax(f_n, dim=1)
-            summedfisher = np.zeros((Number_of_FisherIts, 12, 12))
-            for row in f_n:
+            for row, logitrow in zip(f_n, logit):
                 if (approximation=="emperical"):
+                    pi_n = row
                     diag_pi_n = torch.diag(pi_n.squeeze(0)).to('cuda')
-                    pi_n_pi_n_T=torch.from_numpy(np.outer(pi_n.cpu().detach().numpy(),np.transpose(pi_n.cpu().detach().numpy()))).to('cuda')
-                #J_f = get_gradient(row, w)
-                J_f = jacobian((torch.squeeze(row,0)),w)
-                jacob1 = J_f.cpu()
-                if (approximation=="emperical"):   
+                    pi_n_pi_n_T=torch.outer(pi_n,torch.t(pi_n))
+                    J_f = jacobian((torch.squeeze(row,0)),w)
                     J_f_T = J_f.permute(1,0)
                     K2 = diag_pi_n-pi_n_pi_n_T
                     K3 = K2.cuda()
                     fisher += torch.matmul((torch.matmul(J_f_T,K3)),J_f)
                 else:
-                    temp_sum = np.zeros((2, 12, 12))
-                    grads = jacob1.detach().numpy()
-                    for j in range(2):
-                        temp_sum[j] += np.array(np.outer(grads[j], np.transpose(grads[j])))
-                    summedfisher[i] += np.sum(temp_sum, axis=0)
-                    fisher += torch.from_numpy(summedfisher[i]).cuda()
-            with torch.no_grad():
-                try:
-                    rank = torch.matrix_rank(fisher).item()
-                    Rank.append(rank)
-                    realisations_torch[i] = fisher.cpu()
-                    Fw = np.matmul(fisher.cpu().numpy(),flat_w)
-                    wFw = np.dot(flat_w,Fw)
-                    FR.append(wFw)
-                except:
-                    pass;
+                    J_f = jacobian((torch.squeeze(row,0)),w)
+                    grads = J_f
+                    #grads = jacob1.detach().numpy()
+                    temp_sum = torch.zeros((outputsize, n_weight, n_weight)).to('cuda')
+                    for j in range(outputsize):
+                        temp_sum[j] += torch.outer(grads[j], torch.t(grads[j]))
+                    fisher += torch.sum(temp_sum, axis=0)
+        with torch.no_grad():
+            try:
+                rank = torch.matrix_rank(fisher).item()
+                Rank.append(rank)
+                realisations_torch[i] = fisher.cpu()
+                Fw = np.matmul(fisher.cpu().numpy(),flat_w)
+                wFw = np.dot(flat_w,Fw)
+                FR.append(wFw)
+            except:
+                pass;
     return realisations_torch, Rank, FR;
 
 
@@ -180,11 +134,11 @@ def calc_eig(Fishers):
         eigval = torch.eig(fisher, eigenvectors=False,  out=None).eigenvalues[:,0]
     return eigval
     
-def normalise(Fishers):
+def normalise(Fishers, n_params):
     fisher_trace = np.trace(np.average(Fishers, axis=0)) 
     finalfisher = np.average(Fishers, axis=0)
-    fhat = 12 * finalfisher/fisher_trace
-    return fhat
+    fhat = finalfisher/fisher_trace
+    return fhat * n_params
 
 #Functions to calculate the Effective Dimension as computed in https://zenodo.org/record/4732830 by Amira Abbas
 def effective_dimension(model, f_hat, num_thetas, n, outputs):
