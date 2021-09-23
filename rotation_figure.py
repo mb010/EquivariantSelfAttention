@@ -39,7 +39,7 @@ config      = ConfigParser.ConfigParser(allow_no_value=True)
 config.read(f"configs/{config_name}")
 quiet = config.getboolean('DEFAULT', 'quiet')
 
-net = locals()[config['model']['base']](**config['model']).to(device)
+model = utils.utils.load_model(config, load_model='best', path_supliment=config['data']['augment']+'/')
 test_data = utils.data.load(
     config,
     train=False,
