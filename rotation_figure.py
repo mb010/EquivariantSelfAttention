@@ -60,7 +60,7 @@ for idx, (img, target) in enumerate(zip(test_data.data, test_data.targets)):
         save=save_path + "/" + save_name,
         show_images=False,
         figsize=(8,4),
-        output='full'
+        out='full'
     )
     np.save(f"{save_path}/rot_pred{idx}.npy", predictions)
     print(idx, mean, std)
