@@ -40,13 +40,13 @@ config.read(f"configs/{config_name}")
 if config['model']['base'] in ['DNSteerableAGRadGalNet', 'AGRadGalNet']:
     mp4_plot           = False
     distribution_plots = True
-    individual_plot    = True
-    training_plot      = True
+    individual_plot    = False
+    training_plot      = False
 else:
     mp4_plot           = False
     distribution_plots = False
     individual_plot    = False
-    training_plot      = True
+    training_plot      = False
 
 # Set seeds for reproduceability
 torch.manual_seed(42)
@@ -486,6 +486,13 @@ if distribution_plots:
 
 
     predictions = raw_predictions.argmax(axis=1)
+
+    np.savez(
+        config["output"]["directory"]+"/"+config["data"]["augment"]+"/"+"amap_predictions_labels.npz",
+        labels = labels,
+        amap = amap,
+        predictions = predictions
+    )
 
     fri_sources = sources[labels==0]
     frii_sources= sources[labels==1]

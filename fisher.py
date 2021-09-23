@@ -33,7 +33,7 @@ n_iterations = int(args['iterations'])
 config      = ConfigParser.ConfigParser(allow_no_value=True)
 config.read(f"configs/{config_name}")
 
-workingdir = config['output']['directory']
+workingdir = config['output']['directory']+'/'+config['data']['augment']
 
 test_data_loader = utils.data.load(
     config,
@@ -75,7 +75,6 @@ Fishers, Rank, FR = utils.fisher.CalcFIM(net, train_loader, n_iterations, output
 
 EV = []
 nbins = 8
-plt.subplot(111)
 #normalise fisher
 normalised_fishers = utils.fisher.normalise(Fishers.cpu(),outputsize*len(net.last_weights().weight[0]))
 #Save Plots of the Eigenvalues, Rank and FR Norm to the relevant model
@@ -83,7 +82,6 @@ normalised_fishers = utils.fisher.normalise(Fishers.cpu(),outputsize*len(net.las
 #Normalise the Fisher Matrix
 ed = []
 n_samples = [i for i in range(100,10000000,100)]
-ed = effective_dimension(net,normalised_fishers, 2, n_samples, 12)
-d = {"Samples": n_samples, "ED": np.array([x/12 for x in ed])}
+ed = utils.fisher.effective_dimension(net, normalised_fishers, 2, n_samples, outputsize*len(net.last_weights().weight[0]))
+d = {"Samples": n_samples, "ED": np.array([x/outputsize*len(net.last_weights().weight[0]) for x in ed])}
 pickle.dump(d, open(f"{workingdir}/effd.p", "wb"))
-plt.plot(d['Samples'], d['ED'])
