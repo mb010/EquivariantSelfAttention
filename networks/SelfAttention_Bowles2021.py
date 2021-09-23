@@ -123,6 +123,10 @@ class AGRadGalNet(nn.Module):
             self.classifier = nn.Linear((imsize//16)**2*64, self.n_classes)
             self.aggregate = lambda x: self.classifier(self.flatten(x))
 
+    def enable_dropout(self):
+        for m in self.modules():
+            if isinstance(m, nn.Dropout):
+                m.train()
 
         ####################
         # initialise weights
@@ -170,7 +174,7 @@ class AGRadGalNet(nn.Module):
     def apply_argmax_softmax(pred):
         log_p = F.softmax(pred, dim=1)
         return log_p
-    
+
     def last_weights(self):
         return self.classifier
 

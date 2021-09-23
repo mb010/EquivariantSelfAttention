@@ -152,16 +152,10 @@ class DNSteerableAGRadGalNet(nn.Module):
         else:
             self.classifier = nn.Linear((150//16)**2*64, self.n_classes)
             self.aggregate = lambda x: self.classifier(self.flatten(x))
-
-
-        ####################
-        # I wonder if I can get away with this? I dont know.
-        # initialise weights
-        #for m in self.modules():
-        #    if isinstance(m, nn.Conv2d):
-        #        init_weights(m, init_type='kaiming')
-        #    elif isinstance(m, nn.BatchNorm2d):
-        #        init_weights(m, init_type='kaiming')
+    def enable_dropout(self):
+        for m in self.modules():
+            if isinstance(m, nn.Dropout):
+                m.train()
 
     # Define Aggregation Methods
     def aggregation_sep(self, *attended_maps, relu=False):
