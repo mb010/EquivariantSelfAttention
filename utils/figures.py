@@ -294,7 +294,7 @@ def fr_rotation_test(model, data, target, idx, device, save='', show_images=True
     output = []
     output.append(np.mean(eta))
     output.append(np.std(eta))
-    if out='full':
+    if out=='full':
         output.append(outp_list)
 
     return output
