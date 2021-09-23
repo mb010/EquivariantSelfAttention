@@ -179,7 +179,7 @@ def make_linemarker(x,y,dx,col,ax):
 
 # -----------------------------------------------------------------------------
 
-def fr_rotation_test(model, data, target, idx, device, save='', show_images=True, figsize=(8,4)):
+def fr_rotation_test(model, data, target, idx, device, save='', show_images=True, figsize=(8,4), out=False):
 
     T = 100
     rotation_list = range(0, 360, 20)
