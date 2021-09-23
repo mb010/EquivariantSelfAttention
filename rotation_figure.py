@@ -51,7 +51,7 @@ save_name = "rotation_"
 save_path = config["output"]["directory"]+"/"config["data"]["augment"]
 
 for idx, (img, target) in enumerate(zip(test_data.data, test_data.targets)):
-    mean, std = utils.figures.fr_rotation_test(
+    mean, std, predictions = utils.figures.fr_rotation_test(
         model=model.to(device),
         data=torch.from_numpy(img.squeeze()[np.newaxis, np.newaxis, :, :]).to(device),
         target=target,
@@ -59,6 +59,8 @@ for idx, (img, target) in enumerate(zip(test_data.data, test_data.targets)):
         device=device,
         save=save_path + "/" + save_name,
         show_images=False,
-        figsize=(8,4)
+        figsize=(8,4),
+        output='full'
     )
+    np.save(f"{save_path}/rot_pred{idx}.npy", predictions)
     print(idx, mean, std)
