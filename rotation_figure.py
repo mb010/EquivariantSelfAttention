@@ -48,7 +48,7 @@ test_data = utils.data.load(
 )
 
 save_name = "rotation_"
-save_path = config["output"]["directory"]+"/"config["data"]["augment"]
+save_path = config["output"]["directory"]+"/"+config["data"]["augment"]
 
 for idx, (img, target) in enumerate(zip(test_data.data, test_data.targets)):
     mean, std, predictions = utils.figures.fr_rotation_test(
