@@ -33,7 +33,7 @@ np.random.seed(42)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Read in config file
-args        = parse_args()
+args        = utils.utils.parse_args()
 config_name = args['config']
 config      = ConfigParser.ConfigParser(allow_no_value=True)
 config.read(f"configs/{config_name}")
