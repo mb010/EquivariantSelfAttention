@@ -1,5 +1,6 @@
 import os
 import sys
+import argparse
 
 import torch
 import torch.nn as nn
@@ -24,11 +25,14 @@ from datasets import MingoLoTSS, MLFR, MLFRTest
 import torch.nn.functional as F
 import pickle
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-args        = utils.utils.parse_args(iterations=True)
+parser = argparse.ArgumentParser()
+parser.add_argument('-I','--iterations', default=100, type=int, required=True, help='Number of realisations of the Fisher Information Matrix')
+parser.add_argument('-C','--config', default="myconfig.txt", type=str, required=True, help='Name of the input config file')
+args, __ = parser.parse_known_args()
 config_name = args['config']
 n_iterations = int(args['iterations'])
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 config      = ConfigParser.ConfigParser(allow_no_value=True)
 config.read(f"configs/{config_name}")
