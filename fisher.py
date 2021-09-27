@@ -29,7 +29,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('-I','--iterations', default=100, type=int, required=True, help='Number of realisations of the Fisher Information Matrix')
 parser.add_argument('-C','--config', default="myconfig.txt", type=str, required=True, help='Name of the input config file')
 args, __ = parser.parse_known_args()
-args = vars(args
+args = vars(args)
 config_name = args['config']
 n_iterations = int(args['iterations'])
 
