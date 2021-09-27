@@ -26,7 +26,7 @@ import pickle
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-args        = utils.utils.parse_args()
+args        = utils.utils.parse_args(iterations=True)
 config_name = args['config']
 n_iterations = int(args['iterations'])
 
@@ -82,6 +82,6 @@ normalised_fishers = utils.fisher.normalise(Fishers.cpu(),outputsize*len(net.las
 #Normalise the Fisher Matrix
 ed = []
 n_samples = [i for i in range(100,10000000,100)]
-ed = utils.fisher.effective_dimension(net, normalised_fishers, 2, n_samples, outputsize*len(net.last_weights().weight[0]))
+ed = utils.fisher.effective_dimension(net, normalised_fishers, outputsize*len(net.last_weights().weight[0]), n_samples, outputsize)
 d = {"Samples": n_samples, "ED": np.array([x/outputsize*len(net.last_weights().weight[0]) for x in ed])}
 pickle.dump(d, open(f"{workingdir}/effd.p", "wb"))

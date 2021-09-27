@@ -134,7 +134,7 @@ def save_evaluation(y_pred,
             #    tmp_labels = np.where(y_labels.flatten()==i, 1, 0)
             #    fpr[i], tpr[i], thresholds[i] = roc_curve(tmp_labels, pred[:, i])
             #    roc_auc[i] = auc(fpr[i], tpr[i])
-            fpr["micro"], tpr["micro"], thresholds["micro"] = roc_curve(tmp_labels.ravel(), y_score.ravel())
+            fpr["micro"], tpr["micro"], thresholds["micro"] = roc_curve(y_lables.ravel(), y_score.ravel())
             AUC = auc(fpr["micro"], tpr["micro"])
 
         report = classification_report(
