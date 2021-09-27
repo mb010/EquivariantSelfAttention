@@ -26,13 +26,14 @@ from datasets import MingoLoTSS, MLFR, MLFRTest
 from torchvision.datasets import MNIST
 
 
-def parse_args():
+def parse_args(iterations=False):
     """
         Parse the command line arguments
         """
     parser = argparse.ArgumentParser()
-    parser.add_argument('-C','--config', default="myconfig.txt", required=True, help='Name of the input config file')
-    parser.add_argument('-I','--iterations', default=100, required=False, help='Number of realisations of the Fisher Information Matrix')
+    if iterations:
+        parser.add_argument('-I','--iterations', default=100, type=int, required=True, help='Number of realisations of the Fisher Information Matrix')
+    parser.add_argument('-C','--config', default="myconfig.txt", type=str, required=True, help='Name of the input config file')
     args, __ = parser.parse_known_args()
 
     return vars(args)

@@ -39,7 +39,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Data sets to iterate over
 data_configs = [
-    "5kernel_bowles2021_mirabest_RandAug.cfg", # Mirabest Dataset - MBFR
+    "5kernel_bowles2021_mirabest_RandAug.cfg", # Mirabest Dataset - MBFR_full
     "5kernel_bowles2021_mingolotss_RandAug.cfg" # Mingo Dataset - MLFR
 ]
 

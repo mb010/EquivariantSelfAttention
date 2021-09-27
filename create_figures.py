@@ -38,15 +38,15 @@ config.read(f"configs/{config_name}")
 
 # Selecting figures to save:
 if config['model']['base'] in ['DNSteerableAGRadGalNet', 'AGRadGalNet']:
-    mp4_plot           = True
+    mp4_plot           = False
     distribution_plots = True
-    individual_plot    = True
-    training_plot      = True
+    individual_plot    = False
+    training_plot      = False
 else:
     mp4_plot           = False
     distribution_plots = False
     individual_plot    = False
-    training_plot      = True
+    training_plot      = False
 
 # Set seeds for reproduceability
 torch.manual_seed(42)
@@ -90,6 +90,8 @@ model = utils.utils.load_model(config, load_model='best', device=device, path_su
 
 # Define interesting sources for each data set_title
 interesting_sources_dict = {
+    'MBFR': [8,107, 95],
+    'MBFR_labels': [0,1,1],
     'MBFRUncertain': [3,32,30],
     'MBFRUncertain_labels': [0,1,1],
     'MBFRConfident': [3,32,30],
@@ -103,11 +105,6 @@ interesting_sources_dict = {
 ################################################################################
 ### Pixel Attention Distribution ###
 # Find or remake code for distrubtion of pixel values.
-
-################################################################################
-### MP4 Figure ###
-# Make 2d figure for MP4 equivalent explanation for a paper.
-# (Compare with Scaife2021 paper & FAIR ViT papers?)
 
 ################################################################################
 ### Individual Source Maps ###
@@ -428,7 +425,7 @@ if mp4_plot:
             output, error = process.communicate()
             print(f">>> OUTPUT FROM ffmpeg:\n{output}\n\n >>> ERROR FROM ffmpeg:\n{error}")
 
-            out_path = out_path.replace('*','%03d')
+            out_path = out_path.replace('*','%03d').replace(' ', '\ ')
             bashCommand = f"rm '{out_path}'"
             process = subprocess.Popen(bashCommand.split(), stdout=subprocess.PIPE)
             output, error = process.communicate()
@@ -489,6 +486,13 @@ if distribution_plots:
 
 
     predictions = raw_predictions.argmax(axis=1)
+
+    np.savez(
+        config["output"]["directory"]+"/"+config["data"]["augment"]+"/"+"amap_predictions_labels.npz",
+        labels = labels,
+        amap = amap,
+        predictions = predictions
+    )
 
     fri_sources = sources[labels==0]
     frii_sources= sources[labels==1]

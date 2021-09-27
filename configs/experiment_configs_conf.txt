@@ -24,9 +24,9 @@
 #5kernel_bowles2021_mirabestconf_RandAug.cfg # Already trained in 'Model Testing'
 #5kernel_scaife2021_mirabestconf_RandAug.cfg # Already trained in 'Model Testing'
 #5kernel_D8_attention_mirabestconf_RandAug.cfg # Already trained in 'Model Testing'
-5kernel_bowles2021_mingolotss_RandAug.cfg
-5kernel_scaife2021_mingolotss_RandAug.cfg
-5kernel_D8_attention_mingolotss_RandAug.cfg
-5kernel_bowles2021_rmnist_RandAug.cfg
-5kernel_scaife2021_rmnist_RandAug.cfg
-5kernel_D8_attention_rmnist_RandAug.cfg
+#5kernel_bowles2021_mingolotss_RandAug.cfg
+#5kernel_scaife2021_mingolotss_RandAug.cfg
+#5kernel_D8_attention_mingolotss_RandAug.cfg
+#5kernel_bowles2021_rmnist_RandAug.cfg
+#5kernel_scaife2021_rmnist_RandAug.cfg
+#5kernel_D8_attention_rmnist_RandAug.cfg

@@ -6,7 +6,7 @@
 #SBATCH --mail-user=micah.bowles@postgrad.manchester.ac.uk
 #SBATCH --time=7-00:00:00
 #SBATCH --ntasks-per-node=1
-#SBATCH --cpus-per-task=17
+#SBATCH --cpus-per-task=8
 #SBATCH --no-reque
 #SBATCH --array=0-23%24
 
@@ -26,11 +26,9 @@ done < configs/experiment_configs.txt
 
 CFG=${CFGS[$SLURM_ARRAY_TASK_ID]}
 
+### Need to find a way to access the final layer by name (for freezing / random initialisation)
 echo '>>> Evaluating:' $CFG
-python -u evaluate.py --config $CFG
-
-echo '>>> Plotting figures for:' $CFG
-python -u create_figures.py --config $CFG
+python -u fisher.py --iterations 100000 --config $CFG
 
 echo '>>> Extracting data for:' $CFG
 python -u extract_best.py --config $CFG
