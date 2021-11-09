@@ -47,7 +47,7 @@ def load(config, train=False, augmentation='config', angle=0, data_loader=False)
     or
     Data loader for the augmented pytorch data (tuple if train=True)
     """
-    assert augmentation in ['config', 'None', 'random rotation', 'restricted random rotation']
+    assert augmentation in ['config', 'None', 'random rotation', 'restricted random rotation', 'rotation only']
     # Read / Create Folder for Data to be Saved
     root = config['data']['directory']
     os.makedirs(root, exist_ok=True)
@@ -74,6 +74,15 @@ def load(config, train=False, augmentation='config', angle=0, data_loader=False)
         def __call__(self, x):
             angle = np.random.choice(a=self.angles, size=1)[0]
             return transforms.functional.rotate(x, angle, resample=self.interpolation)
+    # Create hard random (seeded) rotation:
+    class RotationOnly:
+        """Rotate by one of the given angles."""
+        def __init__(self, angle, interpolation):
+            self.angle = angle
+            self.interpolation = interpolation
+
+        def __call__(self, x):
+            return transforms.functional.rotate(x, self.angle, resample=self.interpolation)
 
     # Compose dict of transformations
     transformations = {
@@ -112,6 +121,12 @@ def load(config, train=False, augmentation='config', angle=0, data_loader=False)
             transforms.ToTensor(),
             transforms.Normalize([datamean],[datastd])
         ]),
+        'rotation only':transforms.Compose([
+            transforms.ToTensor(),
+            transforms.CenterCrop(imsize),
+            RotationOnly(angle, interpolation=PIL.Image.BILINEAR),
+            transforms.Normalize([datamean],[datastd])
+        ]),
         'restricted random rotation':transforms.Compose([
             transforms.CenterCrop(imsize),
             transforms.RandomVerticalFlip(p=p_flip),
@@ -126,7 +141,7 @@ def load(config, train=False, augmentation='config', angle=0, data_loader=False)
 
     download = True
     data_class = globals()[config['data']['dataset']]
-    if augmentation in ['None', 'random rotation', 'restricted random rotation']:
+    if augmentation in ['None', 'random rotation', 'restricted random rotation', 'rotation only']:
         transform = transformations[augmentation]
     else:
         if augmentation=='True' and p_flip==0.5:

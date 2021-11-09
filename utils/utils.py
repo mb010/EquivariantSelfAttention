@@ -137,16 +137,18 @@ def plot_3(
     if cbars_bool[0]:
         divider_a = make_axes_locatable(ax_dict['a'])
         cax_a = divider_a.append_axes('bottom', size='5%', pad=0.05)
-        fig.colorbar(im_a, cax_a, orientation='horizontal')
+        cbar = fig.colorbar(im_a, cax_a, orientation='horizontal')
+        cbar.ax.tick_params(labelsize=16)
     if cbars_bool[1]:
         divider_b = make_axes_locatable(ax_dict['b'])
         cax_b = divider_b.append_axes('bottom', size='5%', pad=0.05)
-        fig.colorbar(im_b, cax_b, orientation='horizontal')
+        cbar = fig.colorbar(im_b, cax_b, orientation='horizontal')
+        cbar.ax.tick_params(labelsize=16)
     if cbars_bool[2]:
         divider_c = make_axes_locatable(ax_dict['c'])
         cax_c = divider_c.append_axes('bottom', size='5%', pad=0.05)
-        fig.colorbar(im_c, cax_c, orientation='horizontal')
-
+        cbar = fig.colorbar(im_c, cax_c, orientation='horizontal')
+        cbar.ax.tick_params(labelsize=16)
 
     if save == '':
         fig.show()

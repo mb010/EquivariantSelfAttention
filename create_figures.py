@@ -42,11 +42,13 @@ if config['model']['base'] in ['DNSteerableAGRadGalNet', 'AGRadGalNet']:
     distribution_plots = True
     individual_plot    = False
     training_plot      = False
+    all_test_sources_individual_plot = False
 else:
     mp4_plot           = False
     distribution_plots = False
     individual_plot    = False
     training_plot      = False
+    all_test_sources_individual_plot = False
 
 # Set seeds for reproduceability
 torch.manual_seed(42)
@@ -101,6 +103,8 @@ interesting_sources_dict = {
     'MNIST': [0,30,50],
     'MNIST_labels': [0,0,0]
 }
+data_name = config['data']['dataset']
+imsize = 150 if data_name != 'MNIST' else 28
 
 ################################################################################
 ### Pixel Attention Distribution ###
@@ -142,6 +146,41 @@ if individual_plot:
         ax[1].set_yticks([])
         title = fr'Mean Attention Map '
         ax[1].set_title(fr'Mean Attention Map (Pred={pred[0]})')
+
+        plt.savefig(
+            FIG_PATH+f'{data_name}_source_{i}.png',
+            transparent=True
+        )
+
+################################################################################
+### All Individual Sample AMaps ###
+# Plot individually
+if all_test_sources_individual_plot:
+    data_name = config['data']['dataset']
+    imsize = 150 if data_name != 'MNIST' else 28
+    sources_of_interest = interesting_sources_dict[data_name]
+
+    test_data = utils.data.load(config, train=False, augmentation='None', data_loader=False)    # Prepare sources and labels
+    for i, source in enumerate(test_data.data):
+        amaps, amap_originals = utils.attention.attentions_func(
+                source.reshape(1,1,imsize,imsize),
+                model,
+                mean=True,
+                device=device,
+                layer_no=3,
+                layer_name_base='attention'
+        )
+        raw_predictions_ = model(torch.tensor(source.reshape(1,1,imsize,imsize)).float().to(device))
+        raw_predictions = raw_predictions_.cpu().detach().numpy()
+        pred = raw_predictions.argmax(axis=1)
+
+        fig, ax = plt.subplots(1, 1, figsize=(5,5))
+
+        ax.imshow(amaps[0].squeeze(), cmap='magma', origin='lower')
+        ax.contour(np.where(test_data.data[i].squeeze()>0,1,0), cmap='cool')
+        ax.set_xticks([])
+        ax.set_yticks([])
+        #ax[1].set_title(fr'Mean Attention Map (Pred={pred[0]})')
 
         plt.savefig(
             FIG_PATH+f'{data_name}_source_{i}.png',
@@ -451,8 +490,8 @@ if distribution_plots:
         path_supliment+='/'
 
     # Load in data
-    test_data_loader = utils.data.load(config, train=False, augmentation='random rotation', data_loader=True)    # Prepare sources and labels
     for idx, r in tqdm(enumerate(range(repititions))):
+        test_data_loader = utils.data.load(config, train=False, angle=r*360/repititions, augmentation='rotation only', data_loader=True)    # Prepare sources and labels
         for idy, (test_data, l) in enumerate(test_data_loader):
             # Produce Attention Maps
             amap_, amap_originals_ = utils.attention.attentions_func(
